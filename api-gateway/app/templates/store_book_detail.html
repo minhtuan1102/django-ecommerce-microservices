@@ -1,0 +1,151 @@
+{% extends 'store_base.html' %}
+{% block title %}{{ book.title }} - Nhà Sách Online{% endblock %}
+{% block content %}
+
+<div class="container py-5">
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/store/">Trang chủ</a></li>
+      <li class="breadcrumb-item active">{{ book.title }}</li>
+    </ol>
+  </nav>
+
+  {% if book %}
+  <div class="row g-5">
+    <!-- Book Image -->
+    <div class="col-md-5">
+      <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+        <img src="https://loremflickr.com/600/800/book?lock={{ book.id }}" class="img-fluid" alt="{{ book.title }}">
+      </div>
+    </div>
+
+    <!-- Book Info -->
+    <div class="col-md-7">
+      <h1 class="fw-bold display-5 mb-2">{{ book.title }}</h1>
+      <p class="fs-4 text-muted mb-4"><i class="bi bi-person-circle me-2"></i>{{ book.author }}</p>
+      
+      <div class="d-flex align-items-center gap-3 mb-4">
+        <span class="display-6 fw-bold text-danger">{{ book.price }} ₫</span>
+        {% if book.stock > 0 %}
+          <span class="badge bg-success-subtle text-success border border-success px-3 py-2 rounded-pill">
+            <i class="bi bi-check-circle-fill me-1"></i>Còn {{ book.stock }} cuốn
+          </span>
+        {% else %}
+          <span class="badge bg-secondary-subtle text-secondary border border-secondary px-3 py-2 rounded-pill">
+            Hết hàng
+          </span>
+        {% endif %}
+      </div>
+
+      <div class="card bg-light border-0 rounded-4 p-4 mb-4">
+        <h5 class="fw-bold mb-3">Mô tả sản phẩm</h5>
+        <p class="text-secondary lh-lg">
+          Cuốn sách "{{ book.title }}" của tác giả {{ book.author }} là một trong những tác phẩm hay nhất mà bạn nên sở hữu. 
+          Với nội dung sâu sắc và phong cách viết lôi cuốn, tác phẩm này hứa hẹn sẽ mang lại cho người đọc những trải nghiệm tuyệt vời.
+          Dữ liệu này được lấy trực tiếp từ Book Microservice để đảm bảo tính chính xác nhất.
+        </p>
+      </div>
+
+      {% if book.stock > 0 %}
+      <div class="d-grid gap-2">
+        {% if customer %}
+        <form method="post" action="/store/add-to-cart/" class="row g-3">
+          {% csrf_token %}
+          <input type="hidden" name="book_id" value="{{ book.id }}">
+          <div class="col-auto">
+            <div class="input-group">
+              <span class="input-group-text bg-white border-end-0">Số lượng</span>
+              <input type="number" name="quantity" value="1" min="1" max="{{ book.stock }}" class="form-control border-start-0 text-center" style="width:80px;">
+            </div>
+          </div>
+          <div class="col">
+            <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold">
+              <i class="bi bi-cart-plus-fill me-2"></i>Thêm vào giỏ hàng
+            </button>
+          </div>
+        </form>
+        {% else %}
+        <a href="/store/login/" class="btn btn-outline-primary btn-lg fw-bold">
+          <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập để mua hàng
+        </a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Reviews Section -->
+  <div class="row mt-5">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+          <div class="d-flex justify-content-between align-items-center">
+            <h4 class="fw-bold mb-0">
+              <i class="bi bi-chat-left-quote-fill text-warning me-2"></i>Đánh giá & Bình luận
+            </h4>
+            <div>
+              {% if average_rating > 0 %}
+              <span class="fs-4 fw-bold text-warning">{{ average_rating }}/5</span>
+              <small class="text-muted ms-1">({{ total_reviews }} đánh giá)</small>
+              {% else %}
+              <small class="text-muted">Chưa có đánh giá</small>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="card-body px-4 pb-4">
+          {% if customer %}
+          <form method="post" action="/store/review/{{ book.id }}/" class="mb-4 p-3 bg-light rounded-3">
+            {% csrf_token %}
+            <h6 class="fw-bold mb-3">Viết đánh giá của bạn</h6>
+            <div class="mb-3">
+              <label class="form-label">Đánh giá</label>
+              <select name="rating" class="form-select" style="width:auto">
+                <option value="5">⭐⭐⭐⭐⭐ - Tuyệt vời</option>
+                <option value="4">⭐⭐⭐⭐ - Tốt</option>
+                <option value="3">⭐⭐⭐ - Bình thường</option>
+                <option value="2">⭐⭐ - Tệ</option>
+                <option value="1">⭐ - Rất tệ</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Bình luận</label>
+              <textarea name="comment" class="form-control" rows="3" placeholder="Chia sẻ cảm nhận của bạn về cuốn sách..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-warning fw-bold"><i class="bi bi-send-fill me-1"></i> Gửi đánh giá</button>
+          </form>
+          {% endif %}
+
+          {% for review in reviews %}
+          <div class="border-bottom py-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <div>
+                {% for i in "12345" %}
+                  {% if forloop.counter <= review.rating %}
+                    <i class="bi bi-star-fill text-warning"></i>
+                  {% else %}
+                    <i class="bi bi-star text-muted"></i>
+                  {% endif %}
+                {% endfor %}
+                <small class="text-muted ms-2">KH #{{ review.customer_id }}</small>
+              </div>
+              <small class="text-muted">{{ review.created_at|truncatechars:10 }}</small>
+            </div>
+            {% if review.comment %}<p class="mb-0 text-secondary">{{ review.comment }}</p>{% endif %}
+          </div>
+          {% empty %}
+          <p class="text-muted text-center py-3">Chưa có đánh giá nào cho sách này. Hãy là người đầu tiên!</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="text-center py-5">
+    <h2 class="text-muted">Không tìm thấy thông tin sách</h2>
+    <a href="/store/" class="btn btn-primary mt-3">Quay lại trang chủ</a>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

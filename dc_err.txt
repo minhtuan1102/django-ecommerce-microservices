@@ -1,0 +1,54 @@
+ Image bookstore-microservice-api-gateway Building 
+ Image bookstore-microservice-cart-service Building 
+ Image bookstore-microservice-book-service Building 
+ Image bookstore-microservice-customer-service Building 
+ Image bookstore-microservice-customer-service Built 
+ Image bookstore-microservice-api-gateway Built 
+ Image bookstore-microservice-book-service Built 
+ Image bookstore-microservice-cart-service Built 
+ Container bookstore-microservice-phpmyadmin-1 Running 
+ Container bookstore-microservice-pgadmin-1 Running 
+ Container bookstore-microservice-cart-service-1 Recreate 
+ Container bookstore-microservice-api-gateway-1 Recreate 
+ Container bookstore-microservice-customer-service-1 Recreate 
+ Container bookstore-microservice-book-service-1 Recreate 
+ Container bookstore-microservice-api-gateway-1 Recreated 
+ Container bookstore-microservice-customer-service-1 Recreated 
+ Container bookstore-microservice-book-service-1 Recreated 
+ Container bookstore-microservice-cart-service-1 Recreated 
+ Container bookstore-microservice-mysql-db-1 Starting 
+ Container bookstore-microservice-postgres-db-1 Starting 
+ Container bookstore-microservice-mysql-db-1 Started 
+ Container bookstore-microservice-mysql-db-1 Waiting 
+ Container bookstore-microservice-mysql-db-1 Waiting 
+ Container bookstore-microservice-mysql-db-1 Waiting 
+ Container bookstore-microservice-postgres-db-1 Started 
+ Container bookstore-microservice-postgres-db-1 Waiting 
+ Container bookstore-microservice-postgres-db-1 Waiting 
+ Container bookstore-microservice-postgres-db-1 Waiting 
+postgres-db-1  | 2026-03-10 09:53:44.329 UTC [1] LOG:  starting PostgreSQL 15.17 (Debian 15.17-1.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+postgres-db-1  | 2026-03-10 09:53:44.330 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+postgres-db-1  | 2026-03-10 09:53:44.330 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+postgres-db-1  | 2026-03-10 09:53:44.336 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+postgres-db-1  | 2026-03-10 09:53:44.347 UTC [29] LOG:  database system was shut down at 2026-03-10 09:53:37 UTC
+postgres-db-1  | 2026-03-10 09:53:44.358 UTC [1] LOG:  database system is ready to accept connections
+mysql-db-1     | 2026-03-10T09:53:45.367461Z 0 [Warning] [MY-011068] [Server] The syntax '--skip-host-cache' is deprecated and will be removed in a future release. Please use SET GLOBAL host_cache_size=0 instead.
+mysql-db-1     | 2026-03-10T09:53:45.372125Z 0 [System] [MY-010116] [Server] /usr/sbin/mysqld (mysqld 8.0.45) starting as process 1
+mysql-db-1     | 2026-03-10T09:53:45.382248Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+mysql-db-1     | 2026-03-10T09:53:45.775274Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+mysql-db-1     | 2026-03-10T09:53:46.121381Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.
+mysql-db-1     | 2026-03-10T09:53:46.121463Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+mysql-db-1     | 2026-03-10T09:53:46.126679Z 0 [Warning] [MY-011810] [Server] Insecure configuration for --pid-file: Location '/var/run/mysqld' in the path is accessible to all OS users. Consider choosing a different directory.
+mysql-db-1     | 2026-03-10T09:53:46.192976Z 0 [System] [MY-011323] [Server] X Plugin ready for connections. Bind-address: '::' port: 33060, socket: /var/run/mysqld/mysqlx.sock
+mysql-db-1     | 2026-03-10T09:53:46.193347Z 0 [System] [MY-010931] [Server] /usr/sbin/mysqld: ready for connections. Version: '8.0.45'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server - GPL.
+ Container bookstore-microservice-mysql-db-1 Healthy 
+ Container bookstore-microservice-mysql-db-1 Healthy 
+ Container bookstore-microservice-book-service-1 Starting 
+ Container bookstore-microservice-mysql-db-1 Healthy 
+ Container bookstore-microservice-customer-service-1 Starting 
+ Container bookstore-microservice-postgres-db-1 Healthy 
+ Container bookstore-microservice-postgres-db-1 Healthy 
+ Container bookstore-microservice-cart-service-1 Starting 
+ Container bookstore-microservice-postgres-db-1 Healthy 
+ Container bookstore-microservice-api-gateway-1 Starting 
+Error response from daemon: No such container: 4aa773f425f4037662d061891606d6b69f08459ffe35fa006b22c448918fb5d9

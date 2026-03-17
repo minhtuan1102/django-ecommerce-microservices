@@ -1,0 +1,169 @@
+#1 [internal] load local bake definitions
+#1 reading from stdin 2.22kB done
+#1 DONE 0.0s
+
+#2 [customer-service internal] load build definition from Dockerfile
+#2 transferring dockerfile: 244B 0.0s done
+#2 DONE 0.0s
+
+#3 [cart-service internal] load build definition from Dockerfile
+#3 transferring dockerfile: 244B done
+#3 DONE 0.0s
+
+#4 [api-gateway internal] load build definition from Dockerfile
+#4 transferring dockerfile: 244B done
+#4 DONE 0.0s
+
+#5 [book-service internal] load build definition from Dockerfile
+#5 transferring dockerfile: 244B done
+#5 DONE 0.1s
+
+#6 [book-service internal] load metadata for docker.io/library/python:3.10-slim
+#6 DONE 1.2s
+
+#7 [cart-service internal] load .dockerignore
+#7 transferring context: 2B done
+#7 DONE 0.0s
+
+#8 [api-gateway internal] load .dockerignore
+#8 transferring context: 2B done
+#8 DONE 0.0s
+
+#9 [book-service internal] load .dockerignore
+#9 transferring context: 2B done
+#9 DONE 0.0s
+
+#10 [customer-service internal] load .dockerignore
+#10 transferring context: 2B done
+#10 DONE 0.0s
+
+#11 [cart-service internal] load build context
+#11 transferring context: 1.85kB done
+#11 DONE 0.0s
+
+#12 [api-gateway internal] load build context
+#12 transferring context: 1.73kB 0.0s done
+#12 DONE 0.0s
+
+#13 [cart-service 1/5] FROM docker.io/library/python:3.10-slim@sha256:4b0a8ebf16cf4563f3d3732bd4f4a464abb2f671b3b9d00aab281d705d224457
+#13 resolve docker.io/library/python:3.10-slim@sha256:4b0a8ebf16cf4563f3d3732bd4f4a464abb2f671b3b9d00aab281d705d224457 0.0s done
+#13 DONE 0.1s
+
+#14 [book-service internal] load build context
+#14 transferring context: 1.86kB 0.0s done
+#14 DONE 0.0s
+
+#15 [customer-service internal] load build context
+#15 transferring context: 1.91kB done
+#15 DONE 0.0s
+
+#16 [api-gateway 4/5] RUN pip install --no-cache-dir -r requirements.txt
+#16 CACHED
+
+#17 [api-gateway 3/5] COPY requirements.txt .
+#17 CACHED
+
+#18 [book-service 3/5] COPY requirements.txt .
+#18 CACHED
+
+#19 [book-service 4/5] RUN pip install --no-cache-dir -r requirements.txt
+#19 CACHED
+
+#20 [api-gateway 5/5] COPY . .
+#20 CACHED
+
+#21 [book-service 5/5] COPY . .
+#21 CACHED
+
+#22 [cart-service 3/5] COPY requirements.txt .
+#22 CACHED
+
+#23 [cart-service 4/5] RUN pip install --no-cache-dir -r requirements.txt
+#23 CACHED
+
+#24 [cart-service 5/5] COPY . .
+#24 CACHED
+
+#25 [customer-service 3/5] COPY requirements.txt .
+#25 CACHED
+
+#26 [book-service 2/5] WORKDIR /app
+#26 CACHED
+
+#27 [customer-service 4/5] RUN pip install --no-cache-dir -r requirements.txt
+#27 CACHED
+
+#28 [customer-service 5/5] COPY . .
+#28 CACHED
+
+#29 [cart-service] exporting to image
+#29 exporting layers
+#29 exporting layers done
+#29 exporting manifest sha256:7f0fcd3b9db29bb1bf0eea86f7a4cc577682de4b7d6cd4f745d502d271458a16 0.0s done
+#29 exporting config sha256:2f3c49beb50e08c0947f781f6263c9e88918de4bc603400ad05fec47642403ca done
+#29 exporting attestation manifest sha256:c7e5d18c4d4be5f84be56b289d14d69e59a3bfdd4eabee7955a8f5a151807ac5
+#29 exporting attestation manifest sha256:c7e5d18c4d4be5f84be56b289d14d69e59a3bfdd4eabee7955a8f5a151807ac5 0.2s done
+#29 exporting manifest list sha256:0c53f0f6259cdc0c4636fe5997f9c471b9a478654205f423c8c481e5bdb42fb8 0.1s done
+#29 naming to docker.io/library/bookstore-microservice-cart-service:latest 0.0s done
+#29 unpacking to docker.io/library/bookstore-microservice-cart-service:latest
+#29 unpacking to docker.io/library/bookstore-microservice-cart-service:latest 0.0s done
+#29 DONE 0.6s
+
+#30 [api-gateway] exporting to image
+#30 exporting layers done
+#30 exporting manifest sha256:0985a8ecd8063715077fd7d8961d9e1b51e0d4245bee5202c732899187fa3705 done
+#30 exporting config sha256:0c70d56f14a4dd8b64d35f3a20786e8bd40d527e85745ec54f8f194833a8a707 0.0s done
+#30 exporting attestation manifest sha256:18d3cf44c625ae47c89c0585f8607e49094acfa2d4e7d3409c4fa4bedd0b0bc3 0.2s done
+#30 exporting manifest list sha256:f981080e8509176bd7a41e9854fb33e37cfd53eb66aced5cfa0ffa55c121ca79 0.1s done
+#30 naming to docker.io/library/bookstore-microservice-api-gateway:latest 0.0s done
+#30 unpacking to docker.io/library/bookstore-microservice-api-gateway:latest 0.0s done
+#30 DONE 0.4s
+
+#31 [customer-service] exporting to image
+#31 exporting layers done
+#31 exporting manifest sha256:6a7cedb3674acb2dddcd547200b220b98dc9c3738672f19c953adf48a99382ee 0.0s done
+#31 exporting config sha256:26c9697e4a0ba393d595d67c354a386514c1daac9d2a5eb6c0c4d50e602d141f 0.0s done
+#31 exporting attestation manifest sha256:f78241cbc7b4a614909310478402686b7a4e1ccf10c1731bd083781349d36ac1 0.2s done
+#31 exporting manifest list sha256:9f914bf1c7ff02155459351e4dee3a06c885cd7e783435663ffde5f0c386e061 0.1s done
+#31 naming to docker.io/library/bookstore-microservice-customer-service:latest 0.0s done
+#31 unpacking to docker.io/library/bookstore-microservice-customer-service:latest 0.0s done
+#31 DONE 0.6s
+
+#32 [book-service] exporting to image
+#32 exporting layers 0.0s done
+#32 exporting manifest sha256:eee88b9957aa36a195ce27809f5bc3c7a7d55fffb0757e3a58c9d87417e98b0b 0.0s done
+#32 exporting config sha256:105a94c0074e1aed3b1d59e1440224c6a0f3d68a24b01ad78ec572fdf5f1e19f 0.0s done
+#32 exporting attestation manifest sha256:1e56f6282448f8b0eaf53a808125e8b1b34ab79d25414a709922564db76fd5c9 0.2s done
+#32 exporting manifest list sha256:ede79fe667087715dcf5a03028a5d50741b1182c756b852c86ade7cb609ccd45 0.1s done
+#32 naming to docker.io/library/bookstore-microservice-book-service:latest 0.0s done
+#32 unpacking to docker.io/library/bookstore-microservice-book-service:latest 0.0s done
+#32 DONE 0.7s
+
+#33 [api-gateway] resolving provenance for metadata file
+#33 DONE 0.1s
+
+#34 [book-service] resolving provenance for metadata file
+#34 DONE 0.1s
+
+#35 [cart-service] resolving provenance for metadata file
+#35 DONE 0.1s
+
+#36 [customer-service] resolving provenance for metadata file
+#36 DONE 0.0s
+Attaching to api-gateway-1, book-service-1, cart-service-1, customer-service-1, mysql-db-1, pgadmin-1, phpmyadmin-1, postgres-db-1
+mysql-db-1  | 2026-03-10 09:53:44+00:00 [Note] [Entrypoint]: Entrypoint script for MySQL Server 8.0.45-1.el9 started.
+postgres-db-1  | 
+postgres-db-1  | PostgreSQL Database directory appears to contain a database; Skipping initialization
+postgres-db-1  | 
+mysql-db-1     | 2026-03-10 09:53:44+00:00 [Note] [Entrypoint]: Switching to dedicated user 'mysql'
+mysql-db-1     | 2026-03-10 09:53:44+00:00 [Note] [Entrypoint]: Entrypoint script for MySQL Server 8.0.45-1.el9 started.
+mysql-db-1     | '/var/lib/mysql/mysql.sock' -> '/var/run/mysqld/mysqld.sock'
+[Kcart-service-1 has been recreated
+[Kapi-gateway-1 has been recreated
+[Kbook-service-1 has been recreated
+[Kcustomer-service-1 has been recreated
+pgadmin-1           | NOTE: Configuring authentication for SERVER mode.
+pgadmin-1           | 
+pgadmin-1           | pgAdmin 4 - Application Initialisation
+pgadmin-1           | ======================================
+pgadmin-1           | 

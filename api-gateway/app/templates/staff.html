@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Quản lý nhân viên{% endblock %}
+{% block nav_staff %}active{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0"><i class="bi bi-person-badge-fill text-primary"></i> Quản lý nhân viên</h4>
+  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStaffModal">
+    <i class="bi bi-plus-circle"></i> Thêm nhân viên
+  </button>
+</div>
+
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr><th>ID</th><th>Tên</th><th>Email</th><th>SĐT</th><th>Vai trò</th><th>Trạng thái</th></tr>
+      </thead>
+      <tbody>
+        {% for s in staff %}
+        <tr>
+          <td>{{ s.id }}</td>
+          <td class="fw-bold">{{ s.name }}</td>
+          <td>{{ s.email }}</td>
+          <td>{{ s.phone }}</td>
+          <td>
+            {% if s.role == 'sales' %}<span class="badge bg-primary">Sales</span>
+            {% elif s.role == 'warehouse' %}<span class="badge bg-warning text-dark">Warehouse</span>
+            {% else %}<span class="badge bg-info">Support</span>{% endif %}
+          </td>
+          <td>
+            {% if s.is_active %}<span class="badge bg-success">Active</span>
+            {% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center text-muted py-4">Chưa có nhân viên nào</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add Staff Modal -->
+<div class="modal fade" id="addStaffModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post">
+        {% csrf_token %}
+        <div class="modal-header"><h5 class="modal-title">Thêm nhân viên</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <div class="mb-3"><label class="form-label">Tên</label><input type="text" name="name" class="form-control" required></div>
+          <div class="mb-3"><label class="form-label">Email</label><input type="email" name="email" class="form-control" required></div>
+          <div class="mb-3"><label class="form-label">SĐT</label><input type="text" name="phone" class="form-control"></div>
+          <div class="mb-3"><label class="form-label">Vai trò</label>
+            <select name="role" class="form-select">
+              <option value="sales">Sales</option>
+              <option value="warehouse">Warehouse</option>
+              <option value="support">Support</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer"><button type="submit" class="btn btn-primary">Thêm</button></div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

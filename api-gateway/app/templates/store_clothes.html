@@ -1,0 +1,138 @@
+{% extends "store_base.html" %}
+{% load humanize %}
+
+{% block title %}Thời trang - Premium Bookstore{% endblock %}
+{% block nav_clothes %}active{% endblock %}
+
+{% block extra_css %}
+    .hero-banner {
+        padding: 64px 0 48px;
+        background:
+            radial-gradient(circle at 10% 20%, rgba(240, 76, 120, 0.22), transparent 42%),
+            radial-gradient(circle at 90% 80%, rgba(238, 67, 120, 0.28), transparent 48%),
+            linear-gradient(130deg, #fff7f9 0%, #fff1f8 100%);
+        border-radius: 0 0 2.75rem 2.75rem;
+        margin-bottom: 2.25rem;
+    }
+    .hero-title {
+        font-size: clamp(2rem, 5vw, 3.4rem);
+        font-weight: 800;
+        letter-spacing: -1.5px;
+        line-height: 1.08;
+        margin-bottom: 1rem;
+    }
+    .book-img-wrapper {
+        height: 300px;
+        background: #f1f1f1;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.15rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .badge-stock {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        padding: 5px 11px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+    .price-tag {
+        font-size: 1.08rem;
+        font-weight: 800;
+        color: var(--primary-color);
+        letter-spacing: -0.35px;
+    }
+    .currency {
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-left: 2px;
+        opacity: 0.8;
+    }
+    .book-actions {
+        display: flex;
+        gap: 0.4rem;
+        align-items: center;
+    }
+    .book-actions .btn {
+        border-radius: 999px;
+        font-size: 0.8rem;
+    }
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-banner">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill fw-bold mb-3 small">THỜI TRANG</span>
+                <h1 class="hero-title">Phong cách thời trang hiện đại</h1>
+                <p class="lead text-muted mb-4">Khám phá các bộ sưu tập quần áo mới nhất, đa dạng chất liệu và phong cách.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container" id="clothes">
+    <!-- All Clothes Section -->
+    <div class="mb-5">
+        <div class="result-summary">
+            <div>
+                <h2 class="section-title mb-0">Danh sách sản phẩm</h2>
+            </div>
+        </div>
+
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+            {% for clothe in clothes %}
+            <div class="col">
+                <div class="book-card p-3 shadow-sm border-0">
+                    <a href="/store/clothes/{{ clothe.id }}/" class="text-decoration-none">
+                        <div class="book-img-wrapper" style="background: #f8f9fa; overflow: hidden; position: relative;">
+                            <img src="https://loremflickr.com/400/600/fashion,clothes?lock={{ clothe.id }}" class="img-fluid w-100 h-100" style="object-fit: cover;" alt="{{ clothe.name }}">
+                            {% if clothe.stock > 0 %}
+                                <span class="badge-stock bg-success text-white">Còn hàng</span>
+                            {% else %}
+                                <span class="badge-stock bg-danger text-white">Hết hàng</span>
+                            {% endif %}
+                        </div>
+                    </a>
+                    <div class="card-body p-0">
+                        <a href="/store/clothes/{{ clothe.id }}/" class="text-decoration-none text-dark">
+                            <h6 class="fw-bold text-truncate mb-1" title="{{ clothe.name }}">{{ clothe.name }}</h6>
+                        </a>
+                        <p class="text-muted small mb-2 text-truncate">Chất liệu: {{ clothe.material }}</p>
+                        <div class="small text-muted mb-2">Tồn kho: {{ clothe.stock }}</div>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <span class="price-tag">{{ clothe.price|floatformat:0|intcomma }}<span class="currency">₫</span></span>
+                            <div class="book-actions">
+                                <a href="/store/clothes/{{ clothe.id }}/" class="btn btn-sm btn-light rounded-pill px-3">Chi tiết</a>
+                                {% if clothe.stock > 0 %}
+                                <form action="/store/add-to-cart/" method="POST">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="clothe_id" value="{{ clothe.id }}">
+                                    <input type="hidden" name="next" value="/store/clothes/">
+                                    <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3">Mua</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-inbox fs-1 text-muted opacity-25"></i>
+                <p class="mt-3 text-muted">Không tìm thấy quần áo nào.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends 'store_base.html' %}
+{% block title %}Đơn hàng của tôi - Nhà Sách Online{% endblock %}
+{% block content %}
+
+<div class="container py-5">
+  <h3 class="fw-bold mb-4">
+    <i class="bi bi-bag-check text-primary me-2"></i>Đơn hàng của tôi
+  </h3>
+
+  {% if orders %}
+  <div class="row g-4">
+    {% for order in orders %}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 px-4">
+          <div>
+            <span class="fw-bold">Đơn hàng #{{ order.id }}</span>
+            <span class="text-muted ms-3 small">
+              <i class="bi bi-calendar3 me-1"></i>{{ order.created_at|truncatechars:10 }}
+            </span>
+          </div>
+          <div class="d-flex align-items-center gap-3">
+            {% if order.status == 'pending' %}
+              <span class="badge bg-warning-subtle text-warning border border-warning px-3 py-2 rounded-pill">
+                <i class="bi bi-hourglass-split me-1"></i>Chờ xử lý
+              </span>
+            {% elif order.status == 'paid' %}
+              <span class="badge bg-info-subtle text-info border border-info px-3 py-2 rounded-pill">
+                <i class="bi bi-credit-card me-1"></i>Đã thanh toán
+              </span>
+            {% elif order.status == 'shipping' %}
+              <span class="badge bg-primary-subtle text-primary border border-primary px-3 py-2 rounded-pill">
+                <i class="bi bi-truck me-1"></i>Đang giao hàng
+              </span>
+            {% elif order.status == 'delivered' %}
+              <span class="badge bg-success-subtle text-success border border-success px-3 py-2 rounded-pill">
+                <i class="bi bi-check-circle-fill me-1"></i>Đã giao hàng
+              </span>
+            {% elif order.status == 'cancelled' %}
+              <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-2 rounded-pill">
+                <i class="bi bi-x-circle me-1"></i>Đã hủy
+              </span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="card-body px-4 py-3">
+          <div class="row align-items-center">
+            <div class="col-md-4">
+              <small class="text-muted">Địa chỉ giao hàng</small>
+              <p class="mb-0 fw-semibold">{{ order.shipping_address }}</p>
+            </div>
+            <div class="col-md-3">
+              <small class="text-muted">Số sản phẩm</small>
+              <p class="mb-0 fw-semibold">{{ order.items|length }} sản phẩm</p>
+            </div>
+            <div class="col-md-3">
+              <small class="text-muted">Tổng tiền</small>
+              <p class="mb-0 fw-bold text-danger fs-5">{{ order.total_price }} ₫</p>
+            </div>
+            <div class="col-md-2 text-end">
+              <a href="/store/orders/{{ order.id }}/" class="btn btn-outline-primary btn-sm px-3">
+                <i class="bi bi-eye me-1"></i>Chi tiết
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-5">
+    <i class="bi bi-bag-x display-1 text-muted"></i>
+    <p class="fs-5 text-muted mt-3 mb-4">Bạn chưa có đơn hàng nào</p>
+    <a href="/store/" class="btn btn-primary btn-lg px-5">
+      <i class="bi bi-shop me-2"></i>Mua sắm ngay
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

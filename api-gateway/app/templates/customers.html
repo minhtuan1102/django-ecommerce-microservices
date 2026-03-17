@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Khách hàng{% endblock %}
+{% block nav_customers %}active{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0"><i class="bi bi-people-fill text-success"></i> Danh sách khách hàng</h4>
+  <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+    <i class="bi bi-plus-lg"></i> Thêm khách hàng
+  </button>
+</div>
+
+{% if error %}
+<div class="alert alert-danger">Lỗi kết nối customer-service: {{ error }}</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Tên</th>
+          <th>Email</th>
+          <th>Giỏ hàng</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in customers %}
+        <tr>
+          <td>{{ c.id }}</td>
+          <td><strong>{{ c.name }}</strong></td>
+          <td>{{ c.email }}</td>
+          <td>
+            <a href="/cart/{{ c.id }}/" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-cart"></i> Xem giỏ hàng
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="text-center text-muted py-4">Chưa có khách hàng nào</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal thêm khách hàng -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">Thêm khách hàng mới</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Họ tên</label>
+            <input type="text" name="name" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="submit" class="btn btn-success">Thêm khách hàng</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

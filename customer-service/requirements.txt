@@ -1,0 +1,7 @@
+django
+djangorestframework
+djangorestframework-simplejwt
+requests
+PyMySQL
+cryptography
+pika

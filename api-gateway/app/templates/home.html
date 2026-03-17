@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - Bookstore{% endblock %}
+{% block nav_home %}active{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0"><i class="bi bi-speedometer2 text-primary"></i> Dashboard</h4>
+  <a href="/store/" class="btn btn-warning fw-bold" style="background:#f4c430;border:none;color:#1a1a2e">
+    <i class="bi bi-shop-window"></i> Xem cửa hàng
+  </a>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-md-3">
+    <div class="card stat-card books p-3">
+      <div class="d-flex align-items-center">
+        <div class="fs-1 text-primary me-3"><i class="bi bi-journal-bookmark-fill"></i></div>
+        <div>
+          <div class="text-muted small">Tổng số sách</div>
+          <div class="fs-3 fw-bold">{{ total_books }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card stat-card customers p-3">
+      <div class="d-flex align-items-center">
+        <div class="fs-1 text-success me-3"><i class="bi bi-people-fill"></i></div>
+        <div>
+          <div class="text-muted small">Khách hàng</div>
+          <div class="fs-3 fw-bold">{{ total_customers }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card p-3" style="border-left:4px solid #e63946">
+      <div class="d-flex align-items-center">
+        <div class="fs-1 me-3" style="color:#e63946"><i class="bi bi-bag-check-fill"></i></div>
+        <div>
+          <div class="text-muted small">Đơn hàng</div>
+          <div class="fs-3 fw-bold">{{ total_orders }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card p-3" style="border-left:4px solid #6f42c1">
+      <div class="d-flex align-items-center">
+        <div class="fs-1 me-3" style="color:#6f42c1"><i class="bi bi-person-badge-fill"></i></div>
+        <div>
+          <div class="text-muted small">Nhân viên</div>
+          <div class="fs-3 fw-bold">{{ total_staff }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-md-3">
+    <div class="card p-3" style="border-left:4px solid #fd7e14">
+      <div class="d-flex align-items-center">
+        <div class="fs-1 me-3" style="color:#fd7e14"><i class="bi bi-person-gear"></i></div>
+        <div>
+          <div class="text-muted small">Quản lý</div>
+          <div class="fs-3 fw-bold">{{ total_managers }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card p-3" style="border-left:4px solid #20c997">
+      <div class="d-flex align-items-center">
+        <div class="fs-1 me-3" style="color:#20c997"><i class="bi bi-credit-card-fill"></i></div>
+        <div>
+          <div class="text-muted small">Thanh toán</div>
+          <div class="fs-3 fw-bold">{{ total_payments }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card p-3" style="border-left:4px solid #0dcaf0">
+      <div class="d-flex align-items-center">
+        <div class="fs-1 me-3" style="color:#0dcaf0"><i class="bi bi-truck"></i></div>
+        <div>
+          <div class="text-muted small">Vận chuyển</div>
+          <div class="fs-3 fw-bold">{{ total_shipments }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-white fw-bold">Truy cập nhanh</div>
+      <div class="card-body d-flex flex-column gap-2">
+        <a href="/books/" class="btn btn-outline-primary"><i class="bi bi-journal-bookmark-fill"></i> Quản lý sách</a>
+        <a href="/customers/" class="btn btn-outline-success"><i class="bi bi-people-fill"></i> Quản lý khách hàng</a>
+        <a href="/orders/" class="btn btn-outline-danger"><i class="bi bi-bag-check-fill"></i> Quản lý đơn hàng</a>
+        <a href="/staff/" class="btn btn-outline-secondary"><i class="bi bi-person-badge-fill"></i> Quản lý nhân viên</a>
+        <a href="/managers/" class="btn btn-outline-warning"><i class="bi bi-person-gear"></i> Quản lý quản lý</a>
+        <a href="/catalog/" class="btn btn-outline-dark"><i class="bi bi-tags-fill"></i> Quản lý danh mục</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-white fw-bold">Công cụ Database</div>
+      <div class="card-body d-flex flex-column gap-2">
+        <a href="http://localhost:8080" target="_blank" class="btn btn-outline-warning">
+          <i class="bi bi-database-fill"></i> phpMyAdmin (MySQL - customer & book)
+        </a>
+        <a href="http://localhost:8081" target="_blank" class="btn btn-outline-info">
+          <i class="bi bi-database-fill-gear"></i> pgAdmin (PostgreSQL - cart & gateway)
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block title %}Danh sách sách{% endblock %}
+{% block nav_books %}active{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0"><i class="bi bi-journal-bookmark-fill text-primary"></i> Danh sách sách</h4>
+  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBookModal">
+    <i class="bi bi-plus-lg"></i> Thêm sách
+  </button>
+</div>
+
+{% if error %}
+<div class="alert alert-danger">Lỗi kết nối book-service: {{ error }}</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Tên sách</th>
+          <th>Tác giả</th>
+          <th>Giá (VNĐ)</th>
+          <th>Tồn kho</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for book in books %}
+        <tr>
+          <td>{{ book.id }}</td>
+          <td><strong>{{ book.title }}</strong></td>
+          <td>{{ book.author }}</td>
+          <td>{{ book.price }}</td>
+          <td>
+            {% if book.stock > 10 %}
+              <span class="badge bg-success">{{ book.stock }}</span>
+            {% elif book.stock > 0 %}
+              <span class="badge bg-warning text-dark">{{ book.stock }}</span>
+            {% else %}
+              <span class="badge bg-danger">Hết hàng</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-center text-muted py-4">Chưa có sách nào</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal thêm sách -->
+<div class="modal fade" id="addBookModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">Thêm sách mới</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Tên sách</label>
+            <input type="text" name="title" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Tác giả</label>
+            <input type="text" name="author" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Giá</label>
+            <input type="number" name="price" class="form-control" step="0.01" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Tồn kho</label>
+            <input type="number" name="stock" class="form-control" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="submit" class="btn btn-primary">Thêm sách</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Quản lý đánh giá{% endblock %}
+{% block nav_reviews %}active{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0"><i class="bi bi-star-fill text-warning"></i> Đánh giá & Bình luận</h4>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr><th>ID</th><th>Khách hàng</th><th>Sách</th><th>Đánh giá</th><th>Bình luận</th><th>Ngày</th></tr>
+      </thead>
+      <tbody>
+        {% for r in reviews %}
+        <tr>
+          <td>{{ r.id }}</td>
+          <td>KH #{{ r.customer_id }}</td>
+          <td>Sách #{{ r.book_id }}</td>
+          <td>
+            {% for i in "12345" %}
+              {% if forloop.counter <= r.rating %}
+                <i class="bi bi-star-fill text-warning"></i>
+              {% else %}
+                <i class="bi bi-star text-muted"></i>
+              {% endif %}
+            {% endfor %}
+          </td>
+          <td>{{ r.comment|truncatewords:20 }}</td>
+          <td>{{ r.created_at|truncatechars:10 }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center text-muted py-4">Chưa có đánh giá nào</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

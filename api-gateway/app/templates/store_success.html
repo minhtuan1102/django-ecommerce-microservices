@@ -1,0 +1,42 @@
+{% extends 'store_base.html' %}
+{% block title %}Đặt hàng thành công - Nhà Sách Online{% endblock %}
+{% block content %}
+
+<div class="container py-5 text-center">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm rounded-4 p-5">
+        <i class="bi bi-check-circle-fill display-1 text-success mb-4"></i>
+        <h2 class="fw-bold">Đặt hàng thành công!</h2>
+        <p class="text-muted mb-4">Cảm ơn {{ customer.name }}, đơn hàng #{{ order.id }} của bạn đang được chúng tôi chuẩn bị và sẽ sớm giao tới bạn.</p>
+        
+        <div class="bg-light rounded-4 p-4 text-start mb-4">
+          <h6 class="fw-bold border-bottom pb-2 mb-3">Thông tin đơn hàng</h6>
+          <div class="d-flex justify-content-between mb-2 small text-muted">
+            <span>Trạng thái:</span>
+            <span class="badge bg-warning-subtle text-warning border border-warning">Chờ xử lý</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2 small text-muted">
+            <span>Địa chỉ nhận hàng:</span>
+            <span class="text-dark">{{ order.shipping_address }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-3 small text-muted">
+            <span>Tổng cộng:</span>
+            <span class="fw-bold text-danger">{{ order.total_price }} ₫</span>
+          </div>
+        </div>
+
+        <div class="d-grid gap-2">
+          <a href="/store/orders/{{ order.id }}/" class="btn btn-outline-primary btn-lg fw-bold">
+            <i class="bi bi-eye me-2"></i>Xem chi tiết đơn hàng
+          </a>
+          <a href="/store/" class="btn btn-primary btn-lg fw-bold">
+            <i class="bi bi-shop me-2"></i>Tiếp tục mua sắm
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

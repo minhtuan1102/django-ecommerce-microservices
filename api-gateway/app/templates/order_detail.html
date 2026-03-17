@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% block title %}Đơn hàng #{{ order.id }} - Bookstore{% endblock %}
+{% block nav_orders %}active{% endblock %}
+{% block content %}
+
+{% if order %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0"><i class="bi bi-bag-check-fill text-primary"></i> Đơn hàng #{{ order.id }}</h4>
+  <a href="/orders/" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1"></i>Quay lại
+  </a>
+</div>
+
+<div class="row g-4">
+  <!-- Order info -->
+  <div class="col-md-8">
+    <div class="card rounded-4 mb-4">
+      <div class="card-header bg-white fw-bold py-3">Thông tin đơn hàng</div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <small class="text-muted">Khách hàng</small>
+            <p class="fw-bold mb-1">{{ order.customer_name }}</p>
+            <small class="text-muted">{{ order.customer_email }}</small>
+          </div>
+          <div class="col-md-6">
+            <small class="text-muted">Địa chỉ giao hàng</small>
+            <p class="fw-bold mb-0">{{ order.shipping_address }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Items -->
+    <div class="card rounded-4 overflow-hidden">
+      <div class="card-header bg-white fw-bold py-3">
+        Sản phẩm ({{ order.items|length }})
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-4">Sách</th>
+              <th class="text-center">Đơn giá</th>
+              <th class="text-center">SL</th>
+              <th class="text-end pe-4">Thành tiền</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in order.items %}
+            <tr>
+              <td class="ps-4">
+                <div class="fw-bold">{{ item.book_title }}</div>
+                <small class="text-muted">{{ item.book_author }}</small>
+              </td>
+              <td class="text-center text-muted">{{ item.price }} ₫</td>
+              <td class="text-center">
+                <span class="badge bg-primary rounded-pill px-3">{{ item.quantity }}</span>
+              </td>
+              <td class="text-end pe-4 fw-bold text-danger">
+                {% widthratio item.price 1 item.quantity %} ₫
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot class="table-light">
+            <tr>
+              <td colspan="3" class="text-end fw-bold pe-3">Tổng cộng:</td>
+              <td class="text-end pe-4 fw-bold text-danger fs-5">{{ order.total_price }} ₫</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status management -->
+  <div class="col-md-4">
+    <div class="card rounded-4 sticky-top" style="top:80px">
+      <div class="card-header bg-white fw-bold py-3">Cập nhật trạng thái</div>
+      <div class="card-body">
+        <div class="mb-3">
+          <span class="small text-muted">Trạng thái hiện tại:</span>
+          <div class="mt-1">
+            {% if order.status == 'pending' %}
+              <span class="badge bg-warning-subtle text-warning border border-warning px-3 py-2 fs-6">
+                <i class="bi bi-hourglass-split me-1"></i>Chờ xử lý
+              </span>
+            {% elif order.status == 'paid' %}
+              <span class="badge bg-info-subtle text-info border border-info px-3 py-2 fs-6">
+                <i class="bi bi-credit-card me-1"></i>Đã thanh toán
+              </span>
+            {% elif order.status == 'shipping' %}
+              <span class="badge bg-primary-subtle text-primary border border-primary px-3 py-2 fs-6">
+                <i class="bi bi-truck me-1"></i>Đang giao hàng
+              </span>
+            {% elif order.status == 'delivered' %}
+              <span class="badge bg-success-subtle text-success border border-success px-3 py-2 fs-6">
+                <i class="bi bi-check-circle-fill me-1"></i>Đã giao hàng
+              </span>
+            {% elif order.status == 'cancelled' %}
+              <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-2 fs-6">
+                <i class="bi bi-x-circle me-1"></i>Đã hủy
+              </span>
+            {% endif %}
+          </div>
+        </div>
+
+        <hr>
+
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Chuyển sang trạng thái:</label>
+            <select name="status" class="form-select">
+              <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>Chờ xử lý</option>
+              <option value="paid" {% if order.status == 'paid' %}selected{% endif %}>Đã thanh toán</option>
+              <option value="shipping" {% if order.status == 'shipping' %}selected{% endif %}>Đang giao hàng</option>
+              <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>Đã giao hàng</option>
+              <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>Hủy đơn</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary w-100 fw-bold">
+            <i class="bi bi-arrow-repeat me-1"></i>Cập nhật
+          </button>
+        </form>
+
+        <hr>
+
+        <div class="small text-muted">
+          <div class="d-flex justify-content-between mb-1">
+            <span>Mã đơn hàng:</span>
+            <span class="fw-bold text-dark">#{{ order.id }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-1">
+            <span>Ngày đặt:</span>
+            <span>{{ order.created_at|truncatechars:10 }}</span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span>KH ID:</span>
+            <span>#{{ order.customer_id }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% else %}
+<div class="text-center py-5 text-muted">
+  <i class="bi bi-exclamation-triangle display-1"></i>
+  <p class="mt-3 fs-5">Không tìm thấy đơn hàng</p>
+  <a href="/orders/" class="btn btn-primary mt-2">Quay lại</a>
+</div>
+{% endif %}
+
+{% endblock %}

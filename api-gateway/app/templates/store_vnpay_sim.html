@@ -1,0 +1,53 @@
+{% extends "store_base.html" %}
+
+{% block title %}VNPay Payment Gateway - Simulation{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-4 text-center border-0">
+                    <img src="https://vnpay.vn/wp-content/uploads/2020/07/Logo-VNPAY-QR.png" alt="VNPay" style="height: 40px;">
+                    <h5 class="fw-bold mt-3 mb-0">Cổng thanh toán giả lập</h5>
+                </div>
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <div class="text-muted small mb-1">Số tiền thanh toán</div>
+                        <h2 class="fw-bold text-primary">{{ order.grand_total|floatformat:0 }} ₫</h2>
+                    </div>
+                    
+                    <div class="p-4 bg-light rounded-4 mb-4">
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span class="text-muted">Mã đơn hàng:</span>
+                            <span class="fw-bold">#{{ order.id }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-0 small">
+                            <span class="text-muted">Mã giao dịch:</span>
+                            <span class="fw-bold text-truncate ms-3">{{ payment.transaction_id }}</span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info border-0 rounded-3 small">
+                        <i class="bi bi-info-circle me-2"></i>Đây là trang giả lập để phục vụ demo đồ án. Trong thực tế, bạn sẽ được chuyển hướng tới hệ thống thật của VNPay.
+                    </div>
+
+                    <div class="d-grid gap-3 mt-5">
+                        <form action="/store/orders/{{ order.id }}/pay/" method="GET">
+                            <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold rounded-pill">
+                                <i class="bi bi-check-circle-fill me-2"></i>Xác nhận thanh toán thành công
+                            </button>
+                        </form>
+                        <a href="/store/orders/{{ order.id }}/" class="btn btn-link text-decoration-none text-muted small">
+                            Hủy giao dịch và quay lại
+                        </a>
+                    </div>
+                </div>
+                <div class="card-footer bg-light py-3 text-center border-0">
+                    <small class="text-muted">An toàn • Bảo mật • Nhanh chóng</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

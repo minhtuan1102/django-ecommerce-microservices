@@ -1,0 +1,157 @@
+{% extends 'store_base.html' %}
+{% block title %}Giỏ hàng - Nhà Sách Online{% endblock %}
+{% block content %}
+
+<div class="container py-5">
+  <h3 class="fw-bold mb-4">
+    <i class="bi bi-cart3 text-primary me-2"></i>Giỏ hàng của <span style="color:#1a1a2e">{{ customer.name }}</span>
+  </h3>
+
+  {% if error %}
+  <div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
+  </div>
+  {% endif %}
+
+  {% if not items %}
+  <!-- Empty cart -->
+  <div class="text-center py-5">
+    <i class="bi bi-cart-x display-1 text-muted"></i>
+    <p class="fs-5 text-muted mt-3 mb-4">Giỏ hàng của bạn đang trống</p>
+    <a href="/store/" class="btn btn-primary btn-lg px-5">
+      <i class="bi bi-arrow-left me-2"></i>Tiếp tục mua sắm
+    </a>
+  </div>
+
+  {% else %}
+  <div class="row g-4">
+    <!-- Cart items -->
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white border-0 py-3 px-4">
+          <span class="fw-bold text-muted">{{ items|length }} sản phẩm</span>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4 py-3">Sách</th>
+                <th class="text-center">Đơn giá</th>
+                <th class="text-center">SL</th>
+                <th class="text-end pe-4">Thành tiền</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in items %}
+              <tr>
+                <td class="ps-4 py-3">
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-3 overflow-hidden flex-shrink-0" style="width:48px;height:65px;background:#eee">
+                      <img src="https://loremflickr.com/100/140/book?lock={{ item.book_id }}" 
+                           class="w-100 h-100 object-fit-cover" 
+                           alt="{{ item.book.title }}">
+                    </div>
+                    <div>
+                      <div class="fw-bold lh-sm">{{ item.book.title|default:"Sách" }}</div>
+                      <small class="text-muted">
+                        <i class="bi bi-person me-1"></i>{{ item.book.author|default:"" }}
+                      </small>
+                      <div class="mt-1">
+                        <a href="/store/remove-from-cart/{{ item.book_id }}/" class="text-danger small text-decoration-none">
+                          <i class="bi bi-trash3 me-1"></i>Xóa
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td class="text-center text-muted">{{ item.book.price }} ₫</td>
+                <td class="text-center">
+                  <span class="badge bg-primary rounded-pill fs-6 px-3">{{ item.quantity }}</span>
+                </td>
+                <td class="text-end pe-4 fw-bold" style="color:#e63946;">{{ item.subtotal }} ₫</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="mt-3">
+        <a href="/store/" class="btn btn-outline-secondary">
+          <i class="bi bi-arrow-left me-1"></i>Tiếp tục mua sắm
+        </a>
+      </div>
+    </div>
+
+    <!-- Order summary -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 sticky-top" style="top:80px">
+        <div class="card-body p-4">
+          <h5 class="fw-bold mb-3">Tóm tắt đơn hàng</h5>
+          <div class="d-flex justify-content-between text-muted mb-2">
+            <span>Tạm tính ({{ items|length }} sản phẩm)</span>
+            <span>{{ total }} ₫</span>
+          </div>
+          <div class="d-flex justify-content-between text-muted mb-2">
+            <span>Phí vận chuyển</span>
+            <span class="text-success fw-semibold">Miễn phí</span>
+          </div>
+          <hr class="my-3">
+          <div class="d-flex justify-content-between fw-bold fs-5 mb-4">
+            <span>Tổng cộng</span>
+            <span style="color:#e63946;">{{ total }} ₫</span>
+          </div>
+          <form method="post" action="/store/checkout/">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Tỉnh/Thành phố</label>
+              <select name="province" class="form-select" required>
+                <option value="" selected disabled>Chọn tỉnh/thành phố</option>
+                <option value="Hà Nội">Hà Nội</option>
+                <option value="Hồ Chí Minh">TP. Hồ Chí Minh</option>
+                <option value="Đà Nẵng">Đà Nẵng</option>
+                <option value="Khác">Tỉnh thành khác</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Địa chỉ chi tiết</label>
+              <textarea name="address_detail" class="form-control" rows="2" placeholder="Số nhà, tên đường, phường/xã..." required></textarea>
+            </div>
+            
+            <div class="mb-4">
+              <label class="form-label small fw-bold">Phương thức thanh toán</label>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="payment_method" id="pay_cod" value="cod" checked>
+                <label class="form-check-label small" for="pay_cod">
+                  Thanh toán khi nhận hàng (COD)
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="payment_method" id="pay_bank" value="bank_transfer">
+                <label class="form-check-label small" for="pay_bank">
+                  Chuyển khoản ngân hàng
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="payment_method" id="pay_wallet" value="e_wallet">
+                <label class="form-check-label small" for="pay_wallet">
+                  Ví điện tử (Momo/ZaloPay)
+                </label>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-lg w-100 fw-bold mb-2"
+              style="background:linear-gradient(135deg,#1a1a2e,#0f3460);color:white;">
+              <i class="bi bi-bag-check-fill me-2"></i>Xác nhận đặt hàng
+            </button>
+          </form>
+          <p class="text-center text-muted small mt-2">
+            <i class="bi bi-shield-check text-success me-1"></i>Thanh toán an toàn & bảo mật
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

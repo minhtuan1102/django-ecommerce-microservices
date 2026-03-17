@@ -1,0 +1,69 @@
+{% extends 'store_base.html' %}
+{% block title %}Đăng ký - Nhà Sách Online{% endblock %}
+{% block content %}
+
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-5 col-lg-4">
+
+      <div class="text-center mb-4">
+        <a href="/store/" class="text-decoration-none">
+          <i class="bi bi-book-half display-4" style="color:#1a1a2e"></i>
+        </a>
+        <h3 class="fw-bold mt-2 mb-1">Tạo tài khoản</h3>
+        <p class="text-muted">Đăng ký để mua sách và quản lý đơn hàng</p>
+      </div>
+
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Họ và tên</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0">
+                  <i class="bi bi-person text-muted"></i>
+                </span>
+                <input type="text" name="name" class="form-control border-start-0 ps-0"
+                  placeholder="Nguyễn Văn A" required autofocus>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Địa chỉ Email</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0">
+                  <i class="bi bi-envelope text-muted"></i>
+                </span>
+                <input type="email" name="email" class="form-control border-start-0 ps-0"
+                  placeholder="email@example.com" required>
+              </div>
+            </div>
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Mật khẩu</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0">
+                  <i class="bi bi-lock text-muted"></i>
+                </span>
+                <input type="password" name="password" class="form-control border-start-0 ps-0"
+                  placeholder="••••••••" required>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-lg w-100 fw-bold" style="background:#1a1a2e; color:white;">
+              <i class="bi bi-person-check-fill me-2"></i>Tạo tài khoản
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <p class="text-center mt-4 text-muted">
+        Đã có tài khoản?
+        <a href="/store/login/" class="fw-bold text-decoration-none" style="color:#1a1a2e">
+          Đăng nhập <i class="bi bi-arrow-right"></i>
+        </a>
+      </p>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Giỏ hàng - Khách #{{ customer_id }}{% endblock %}
+{% block nav_customers %}active{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0"><i class="bi bi-cart-fill text-success"></i> Giỏ hàng - Khách hàng #{{ customer_id }}</h4>
+  <a href="/customers/" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+</div>
+
+{% if error %}
+<div class="alert alert-danger">Lỗi kết nối cart-service: {{ error }}</div>
+{% endif %}
+{% if cart_error %}
+<div class="alert alert-warning"><i class="bi bi-exclamation-triangle"></i> {{ cart_error }}</div>
+{% endif %}
+
+{% if cart_id %}
+<div class="card mb-4">
+  <div class="card-header bg-white fw-bold">Thêm sách vào giỏ</div>
+  <div class="card-body">
+    <form method="post" class="row g-3">
+      {% csrf_token %}
+      <input type="hidden" name="cart_id" value="{{ cart_id }}">
+      <div class="col-md-6">
+        <label class="form-label">Chọn sách</label>
+        <select name="book_id" class="form-select" required>
+          {% for book in books %}
+          <option value="{{ book.id }}">{{ book.title }} (còn {{ book.stock }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Số lượng</label>
+        <input type="number" name="quantity" class="form-control" value="1" min="1" required>
+      </div>
+      <div class="col-md-3 d-flex align-items-end">
+        <button type="submit" class="btn btn-success w-100"><i class="bi bi-cart-plus"></i> Thêm</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>ID Sách</th>
+          <th>Số lượng</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td>Sách #{{ item.book_id }}</td>
+          <td><span class="badge bg-primary">{{ item.quantity }}</span></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3" class="text-center text-muted py-4">Giỏ hàng trống</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
