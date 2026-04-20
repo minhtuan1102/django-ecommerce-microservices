@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  chatbot-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: consulting-chatbot-service
+    ports:
+      - "8003:8000"
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=your-secret-key-change-in-production
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=chatbot_db
+      - DB_USER=bookstore_user
+      - DB_PASSWORD=bookstore_pass
+      - DB_HOST=postgres-db
+      - DB_PORT=5432
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - BEHAVIOR_SERVICE_URL=http://behavior-analysis-service:8000
+      - CHROMA_PERSIST_DIRECTORY=/app/vectorstore
+      - EMBEDDING_MODEL=sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+      - LLM_MODEL=gpt-3.5-turbo
+    volumes:
+      - ../knowledge-base/vectorstore:/app/vectorstore:ro
+      - chatbot_logs:/app/logs
+    depends_on:
+      - postgres-db
+    networks:
+      - bookstore-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/chat/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: chatbot-postgres-db
+    environment:
+      - POSTGRES_DB=chatbot_db
+      - POSTGRES_USER=bookstore_user
+      - POSTGRES_PASSWORD=bookstore_pass
+    volumes:
+      - chatbot_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    networks:
+      - bookstore-network
+    restart: unless-stopped
+
+volumes:
+  chatbot_postgres_data:
+  chatbot_logs:
+
+networks:
+  bookstore-network:
+    external: true

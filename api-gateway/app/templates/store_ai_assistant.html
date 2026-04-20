@@ -1,0 +1,658 @@
+{% extends "store_base.html" %}
+{% load humanize %}
+
+{% block title %}AI Assistant | Trợ lý mua sắm đa ngành{% endblock %}
+{% block nav_ai %}active{% endblock %}
+
+{% block extra_css %}
+.ai-hero {
+    padding: 56px 0 40px;
+    background:
+        radial-gradient(circle at 15% 20%, rgba(76, 201, 240, 0.25), transparent 42%),
+        radial-gradient(circle at 88% 76%, rgba(67, 97, 238, 0.25), transparent 48%),
+        linear-gradient(140deg, #f8fbff 0%, #fff7ef 100%);
+    border-radius: 0 0 2.4rem 2.4rem;
+    margin-bottom: 1.6rem;
+}
+.hero-title {
+    font-size: clamp(1.9rem, 4.5vw, 3.1rem);
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1.08;
+}
+.status-pill {
+    border-radius: 999px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+.glass-card {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 20px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+    padding: 1rem;
+}
+.metric-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+}
+.metric-card {
+    border: 1px solid rgba(0, 0, 0, 0.07);
+    border-radius: 14px;
+    padding: 0.72rem;
+    background: #fff;
+}
+.metric-card .label {
+    font-size: 0.72rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+.metric-card .value {
+    font-weight: 800;
+    font-size: 1.02rem;
+    display: block;
+}
+.category-chip {
+    background: #eef2ff;
+    color: #3340a7;
+    border-radius: 999px;
+    padding: 0.28rem 0.62rem;
+    font-size: 0.74rem;
+    font-weight: 700;
+}
+.quick-prompt {
+    border-radius: 999px;
+    font-size: 0.78rem;
+    padding: 0.35rem 0.75rem;
+}
+.chat-box {
+    height: 480px;
+    overflow-y: auto;
+    border-radius: 20px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    background: #f8faff;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.msg {
+    max-width: 80%;
+    padding: 0.8rem 1.2rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    position: relative;
+    animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.msg-user {
+    align-self: flex-end;
+    background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+    color: #fff;
+    border-radius: 20px 20px 0 20px;
+    box-shadow: 0 4px 12px rgba(67, 97, 238, 0.2);
+}
+.msg-ai {
+    align-self: flex-start;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    color: #2b2d42;
+    border-radius: 20px 20px 20px 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+.chat-input-container {
+    background: #fff;
+    border-radius: 30px;
+    padding: 0.5rem 1.5rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+}
+.chat-input-container:focus-within {
+    box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1);
+    border-color: #4361ee;
+}
+.chat-input-container input {
+    border: none;
+    flex-grow: 1;
+    padding: 0.5rem 0;
+    font-size: 1rem;
+}
+.chat-input-container input:focus {
+    outline: none;
+}
+.btn-send {
+    background: #4361ee;
+    color: #fff;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    transition: all 0.2s ease;
+}
+.btn-send:hover {
+    transform: scale(1.1);
+    background: #3a0ca3;
+}
+.msg-meta {
+    font-size: 0.72rem;
+    color: #6c757d;
+    margin-top: 0.2rem;
+}
+.recommend-card {
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.22s ease;
+    background: #fff;
+}
+.recommend-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 14px 24px rgba(0, 0, 0, 0.09);
+}
+.recommend-thumb {
+    height: 170px;
+    background: #f2f4ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+}
+.recommend-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.recommend-type {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 0.69rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    background: #111;
+    color: #fff;
+    border-radius: 999px;
+    padding: 4px 9px;
+}
+.score-pill {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    border-radius: 999px;
+    padding: 4px 9px;
+    background: #e8fff2;
+    color: #117b41;
+}
+.recommend-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    min-height: 44px;
+}
+.recommend-price {
+    font-size: 1.02rem;
+    font-weight: 800;
+    color: #3340a7;
+}
+@media (max-width: 991.98px) {
+    .chat-box {
+        height: 300px;
+    }
+}
+{% endblock %}
+
+{% block content %}
+<section class="ai-hero">
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-bold mb-2">AI COMMERCE ASSISTANT</span>
+                <h1 class="hero-title mb-2">Gợi ý mua sắm cá nhân hóa cho mọi ngành hàng</h1>
+                <p class="text-muted mb-0">Hệ thống trợ lý AI giúp bạn tìm kiếm sản phẩm phù hợp nhất.</p>
+            </div>
+            <div class="d-flex flex-column gap-2">
+                <span class="status-pill {% if chatbot_health_status == 'healthy' %}bg-success-subtle text-success{% elif chatbot_health_status == 'unreachable' %}bg-warning-subtle text-warning{% else %}bg-danger-subtle text-danger{% endif %}">
+                    Chatbot: {{ chatbot_health_status|upper }}
+                </span>
+                <span class="status-pill bg-primary-subtle text-primary">Customer: #{{ customer.id }}</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container pb-5">
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="glass-card">
+                <h5 class="fw-bold mb-3">Sở thích của bạn</h5>
+                {% if behavior_data %}
+                <div class="metric-grid mb-3">
+                    <div class="metric-card">
+                        <span class="label">Segment</span>
+                        <span class="value">{{ behavior_data.segment|default:"Regular" }}</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="label">Engagement</span>
+                        <span class="value">{{ behavior_data.engagement_score|default:50|floatformat:1 }}</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="label">Churn Risk</span>
+                        <span class="value">{{ behavior_data.churn_risk|default:0|floatformat:2 }}</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="label">Churn Level</span>
+                        <span class="value">{{ behavior_data.churn_level|default:"Low" }}</span>
+                    </div>
+                </div>
+                {% if predicted_categories %}
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    {% for cat in predicted_categories %}
+                    <span class="category-chip">
+                        {{ cat.category }}
+                        {% if cat.probability %}
+                        ({{ cat.probability|floatformat:2 }})
+                        {% endif %}
+                    </span>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted small mb-0">Chưa có category dự đoán, AI sẽ dùng dữ liệu mặc định.</p>
+                {% endif %}
+                {% else %}
+                <p class="text-muted mb-0">Chưa lấy được hồ sơ hành vi. Bạn vẫn có thể chat và nhận tư vấn từ dữ liệu sản phẩm thực.</p>
+                {% endif %}
+            </div>
+
+            <div class="glass-card mt-4">
+                <h6 class="fw-bold mb-3">Gợi ý nhanh cho chatbot</h6>
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-sm btn-outline-primary quick-prompt" data-prompt="Gợi ý cho tôi 3 sản phẩm gia dụng dưới 3 triệu">Gia dụng dưới 3 triệu</button>
+                    <button class="btn btn-sm btn-outline-primary quick-prompt" data-prompt="Tôi muốn sản phẩm làm đẹp bán chạy và còn hàng">Làm đẹp bán chạy</button>
+                    <button class="btn btn-sm btn-outline-primary quick-prompt" data-prompt="Tôi cần đồ thể thao cho người mới bắt đầu">Đồ thể thao cho beginner</button>
+                    <button class="btn btn-sm btn-outline-primary quick-prompt" data-prompt="Tóm tắt chính sách đổi trả và giao hàng">Chính sách đổi trả</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Chatbot tư vấn AI</h5>
+                    <small class="text-muted">RAG + Personalization</small>
+                </div>
+
+                <div id="chatMessages" class="chat-box mb-3">
+                    <div class="msg msg-ai">
+                        Xin chào {{ customer.name }}. Mình đã sẵn sàng tư vấn sản phẩm theo hành vi mua sắm của bạn.
+                        <div class="msg-meta">AI Assistant</div>
+                    </div>
+                </div>
+
+                <form id="chatForm" class="mt-4">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <select id="chatCategory" class="form-select rounded-pill border-0 shadow-sm px-3" style="height: 50px;">
+                                <option value="">Tất cả ngữ cảnh</option>
+                                <option value="products">Sản phẩm</option>
+                                <option value="policies">Chính sách</option>
+                                <option value="faqs">FAQ</option>
+                            </select>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="chat-input-container shadow-sm">
+                                <input id="chatInput" type="text" placeholder="Hỏi tôi về sản phẩm, chính sách..." maxlength="1200" required>
+                                <button class="btn-send" type="submit">
+                                    <i class="bi bi-send-fill"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card mt-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div>
+                <h5 class="fw-bold mb-0">Gợi ý AI đa mặt hàng</h5>
+                <small class="text-muted">Hiển thị {{ recommendation_count }} kết quả từ dữ liệu catalog thật</small>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <div class="btn-group" role="group" aria-label="item-type-filter">
+                    <button class="btn btn-sm btn-outline-dark active rec-filter" data-type="all">All</button>
+                    <button class="btn btn-sm btn-outline-dark rec-filter" data-type="mobile">Mobile</button>
+                    <button class="btn btn-sm btn-outline-dark rec-filter" data-type="laptop">Laptop</button>
+                    <button class="btn btn-sm btn-outline-dark rec-filter" data-type="fashion">Fashion</button>
+                    <button class="btn btn-sm btn-outline-dark rec-filter" data-type="home">Home</button>
+                    <button class="btn btn-sm btn-outline-dark rec-filter" data-type="beauty">Beauty</button>
+                    <button class="btn btn-sm btn-outline-dark rec-filter" data-type="sports">Sports</button>
+                </div>
+                <div class="input-group input-group-sm" style="min-width: 220px;">
+                    <input id="recSearchInput" type="text" class="form-control" placeholder="Tìm trong gợi ý...">
+                    <button id="recSearchBtn" class="btn btn-outline-primary" type="button">Lọc</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="recommendationsGrid" class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
+            {% for item in ai_recommendations %}
+            <div class="col">
+                <div class="recommend-card h-100">
+                    <a
+                        href="{{ item.detail_url }}"
+                        class="recommend-thumb track-link"
+                        data-product-id="{{ item.id }}"
+                        data-category="{{ item.category }}"
+                        data-item-type="{{ item.item_type }}"
+                    >
+                        <span class="recommend-type">{{ item.item_type }}</span>
+                        <span class="score-pill">AI {{ item.ai_score }}</span>
+                        <img
+                            src="{{ item.image_url }}"
+                            alt="{{ item.title }}"
+                            loading="lazy"
+                            onerror="this.src='data:image/svg+xml;utf8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27360%27 height=%27220%27%3E%3Crect width=%27100%25%27 height=%27100%25%27 fill=%27%23f2f4ff%27/%3E%3Ctext x=%2724%27 y=%27110%27 fill=%27%233a4374%27 font-size=%2720%27 font-family=%27Arial%27%3EPRODUCT%3C/text%3E%3C/svg%3E';"
+                        >
+                    </a>
+                    <div class="p-3 d-flex flex-column h-100">
+                        <div class="recommend-title">{{ item.title }}</div>
+                        <div class="small text-muted mb-2">{{ item.category }}</div>
+                        <div class="d-flex justify-content-between align-items-center mt-auto mb-2">
+                            <span class="recommend-price">{{ item.price|floatformat:0|intcomma }}₫</span>
+                            {% if item.in_stock %}
+                            <span class="badge text-bg-success">Còn hàng</span>
+                            {% else %}
+                            <span class="badge text-bg-secondary">Hết hàng</span>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex gap-2">
+                            {% if item.detail_url %}
+                            <a
+                                href="{{ item.detail_url }}"
+                                class="btn btn-sm btn-outline-primary w-100 track-link"
+                                data-product-id="{{ item.id }}"
+                                data-category="{{ item.category }}"
+                                data-item-type="{{ item.item_type }}"
+                            >Chi tiết</a>
+                            {% endif %}
+
+                            {% if item.add_to_cart_payload and item.in_stock %}
+                            <form action="/store/add-to-cart/" method="POST" class="w-100 track-form" data-product-id="{{ item.id }}" data-category="{{ item.category }}" data-item-type="{{ item.item_type }}">
+                                {% csrf_token %}
+                                {% if item.add_to_cart_payload.book_id %}
+                                <input type="hidden" name="book_id" value="{{ item.add_to_cart_payload.book_id }}">
+                                {% endif %}
+                                {% if item.add_to_cart_payload.clothe_id %}
+                                <input type="hidden" name="clothe_id" value="{{ item.add_to_cart_payload.clothe_id }}">
+                                {% endif %}
+                                <input type="hidden" name="next" value="/store/ai-assistant/">
+                                <button type="submit" class="btn btn-sm btn-primary w-100">Thêm giỏ</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="text-center py-4 text-muted">
+                    Chưa có gợi ý phù hợp. Hãy gửi thêm câu hỏi cho chatbot để tinh chỉnh.
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const chatForm = document.getElementById("chatForm");
+    const chatInput = document.getElementById("chatInput");
+    const chatCategory = document.getElementById("chatCategory");
+    const chatMessages = document.getElementById("chatMessages");
+    const recGrid = document.getElementById("recommendationsGrid");
+    const recSearchInput = document.getElementById("recSearchInput");
+    const recSearchBtn = document.getElementById("recSearchBtn");
+    const recFilters = document.querySelectorAll(".rec-filter");
+
+    let currentType = "all";
+
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) {
+            return parts.pop().split(';').shift();
+        }
+        return "";
+    }
+
+    const csrfToken = getCookie("csrftoken");
+
+    function appendMessage(text, role, sources) {
+        const normalizedText = String(text || "")
+            .replace(/\*\*(.*?)\*\*/g, "$1")
+            .replace(/^#+\s*/gm, "")
+            .replace(/^-\s+/gm, "• ");
+
+        const wrap = document.createElement("div");
+        wrap.className = `msg ${role === "user" ? "msg-user" : "msg-ai"}`;
+        wrap.textContent = normalizedText;
+
+        const meta = document.createElement("div");
+        meta.className = "msg-meta";
+        meta.textContent = role === "user" ? "Bạn" : "AI Assistant";
+        wrap.appendChild(meta);
+
+        if (Array.isArray(sources) && sources.length > 0 && role !== "user") {
+            const sourceDiv = document.createElement("div");
+            sourceDiv.className = "msg-meta";
+            sourceDiv.textContent = `Nguồn tham chiếu: ${sources.length}`;
+            wrap.appendChild(sourceDiv);
+        }
+
+        chatMessages.appendChild(wrap);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function trackBehavior(eventType, data) {
+        try {
+            await fetch("/api/ai/behavior/track/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                },
+                body: JSON.stringify({
+                    event_type: eventType,
+                    event_data: data || {},
+                    category: data && data.category ? data.category : null,
+                    product_id: data && data.product_id ? Number(data.product_id) : null,
+                    device: window.innerWidth <= 768 ? "mobile" : "desktop",
+                }),
+            });
+        } catch (err) {
+            console.warn("track_behavior_failed", err);
+        }
+    }
+
+    function renderRecommendations(items) {
+        if (!Array.isArray(items) || items.length === 0) {
+            recGrid.innerHTML = '<div class="col-12"><div class="text-center py-4 text-muted">Không có gợi ý phù hợp cho bộ lọc hiện tại.</div></div>';
+            return;
+        }
+
+        const html = items.map((item) => {
+            const inStockBadge = item.in_stock
+                ? '<span class="badge text-bg-success">Còn hàng</span>'
+                : '<span class="badge text-bg-secondary">Hết hàng</span>';
+
+            const detailBtn = item.detail_url
+                ? `<a href="${item.detail_url}" class="btn btn-sm btn-outline-primary w-100 track-link" data-product-id="${item.id}" data-category="${item.category || ''}" data-item-type="${item.item_type || ''}">Chi tiết</a>`
+                : "";
+
+            const imageUrl = item.image_url || "data:image/svg+xml;utf8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27360%27 height=%27220%27%3E%3Crect width=%27100%25%27 height=%27100%25%27 fill=%27%23f2f4ff%27/%3E%3Ctext x=%2724%27 y=%27110%27 fill=%27%233a4374%27 font-size=%2720%27 font-family=%27Arial%27%3EPRODUCT%3C/text%3E%3C/svg%3E";
+
+            let cartForm = "";
+            if (item.add_to_cart_payload && item.in_stock) {
+                const hiddenField = item.add_to_cart_payload.book_id
+                    ? `<input type="hidden" name="book_id" value="${item.add_to_cart_payload.book_id}">`
+                    : `<input type="hidden" name="clothe_id" value="${item.add_to_cart_payload.clothe_id}">`;
+                cartForm = `
+                    <form action="/store/add-to-cart/" method="POST" class="w-100 track-form" data-product-id="${item.id}" data-category="${item.category || ''}" data-item-type="${item.item_type || ''}">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                        ${hiddenField}
+                        <input type="hidden" name="next" value="/store/ai-assistant/">
+                        <button type="submit" class="btn btn-sm btn-primary w-100">Thêm giỏ</button>
+                    </form>
+                `;
+            }
+
+            return `
+                <div class="col">
+                    <div class="recommend-card h-100">
+                        <a href="${item.detail_url || '#'}" class="recommend-thumb track-link" data-product-id="${item.id}" data-category="${item.category || ''}" data-item-type="${item.item_type || ''}">
+                            <span class="recommend-type">${item.item_type || 'general'}</span>
+                            <span class="score-pill">AI ${Number(item.ai_score || 0).toFixed(2)}</span>
+                            <img src="${imageUrl}" alt="${item.title || 'Product'}" loading="lazy" onerror="this.src='data:image/svg+xml;utf8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27360%27 height=%27220%27%3E%3Crect width=%27100%25%27 height=%27100%25%27 fill=%27%23f2f4ff%27/%3E%3Ctext x=%2724%27 y=%27110%27 fill=%27%233a4374%27 font-size=%2720%27 font-family=%27Arial%27%3EPRODUCT%3C/text%3E%3C/svg%3E';">
+                        </a>
+                        <div class="p-3 d-flex flex-column h-100">
+                            <div class="recommend-title">${item.title || 'Unknown product'}</div>
+                            <div class="small text-muted mb-2">${item.category || 'general'}</div>
+                            <div class="d-flex justify-content-between align-items-center mt-auto mb-2">
+                                <span class="recommend-price">${Math.round(Number(item.price || 0)).toLocaleString('vi-VN')}₫</span>
+                                ${inStockBadge}
+                            </div>
+                            <div class="d-flex gap-2">${detailBtn}${cartForm}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join("");
+
+        recGrid.innerHTML = html;
+    }
+
+    async function loadRecommendations() {
+        const q = recSearchInput ? recSearchInput.value.trim() : "";
+        const url = `/api/ai/recommendations/?type=${encodeURIComponent(currentType)}&q=${encodeURIComponent(q)}&limit=10`;
+
+        try {
+            const r = await fetch(url, { method: "GET" });
+            const payload = await r.json();
+            if (!r.ok || !payload.success) {
+                renderRecommendations([]);
+                return;
+            }
+            renderRecommendations(payload.data.recommendations || []);
+        } catch (err) {
+            console.error("load_recommendations_failed", err);
+            renderRecommendations([]);
+        }
+    }
+
+    if (chatForm) {
+        chatForm.addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const message = (chatInput.value || "").trim();
+            if (!message) {
+                return;
+            }
+
+            appendMessage(message, "user");
+            chatInput.value = "";
+
+            try {
+                await trackBehavior("search", { query: message, category: chatCategory.value || "general" });
+                const r = await fetch("/api/ai/chat/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken,
+                    },
+                    body: JSON.stringify({
+                        message,
+                        category: chatCategory.value || null,
+                        personalized: true,
+                    }),
+                });
+
+                const payload = await r.json();
+                if (!r.ok) {
+                    appendMessage(payload.error || "Chatbot đang bận, vui lòng thử lại.", "ai");
+                    return;
+                }
+
+                appendMessage(payload.response || "Không có phản hồi.", "ai", payload.sources || []);
+            } catch (err) {
+                appendMessage("Không thể kết nối chatbot AI lúc này.", "ai");
+            }
+        });
+    }
+
+    document.querySelectorAll(".quick-prompt").forEach((btn) => {
+        btn.addEventListener("click", function () {
+            chatInput.value = this.dataset.prompt || "";
+            chatInput.focus();
+        });
+    });
+
+    if (recSearchBtn) {
+        recSearchBtn.addEventListener("click", loadRecommendations);
+    }
+
+    recFilters.forEach((btn) => {
+        btn.addEventListener("click", function () {
+            recFilters.forEach((b) => b.classList.remove("active"));
+            this.classList.add("active");
+            currentType = this.dataset.type || "all";
+            loadRecommendations();
+        });
+    });
+
+    document.addEventListener("click", function (e) {
+        const target = e.target.closest(".track-link");
+        if (!target) {
+            return;
+        }
+        trackBehavior("product_view", {
+            product_id: target.dataset.productId,
+            category: target.dataset.category,
+            item_type: target.dataset.itemType,
+        });
+    });
+
+    document.addEventListener("submit", function (e) {
+        const form = e.target.closest(".track-form");
+        if (!form) {
+            return;
+        }
+        trackBehavior("add_to_cart", {
+            product_id: form.dataset.productId,
+            category: form.dataset.category,
+            item_type: form.dataset.itemType,
+        });
+    });
+
+    trackBehavior("page_view", { page: "store_ai_assistant" });
+})();
+</script>
+{% endblock %}

@@ -5,6 +5,31 @@ from rest_framework.response import Response
 from django.conf import settings
 
 
+from .inference import predict_next_action
+
+class PredictBehavior(APIView):
+    """Predicts the next action of a user based on their behavior sequence."""
+    def post(self, request):
+        sequence = request.data.get('sequence', [])
+        if not sequence:
+            return Response({"error": "Sequence is required"}, status=400)
+        
+        # Example sequence: [0, 1, 2, 0, 1] representing action IDs
+        action_idx = predict_next_action(sequence)
+        
+        if action_idx is not None:
+            # You can map back action_idx to action name if you have the label encoder
+            actions = ["view", "click", "add_to_cart", "purchase", "wishlist", "remove_from_cart", "share", "review"]
+            action_name = actions[action_idx] if action_idx < len(actions) else "unknown"
+            
+            return Response({
+                "next_action_index": action_idx,
+                "next_action_name": action_name
+            })
+        else:
+            return Response({"error": "Prediction failed or model not loaded"}, status=500)
+
+
 class RecommendForCustomer(APIView):
     def get(self, request, customer_id):
         try:

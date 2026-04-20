@@ -1,0 +1,14 @@
+{
+  "vocab_sizes": {
+    "job": 13,
+    "location": 41,
+    "gender": 3
+  },
+  "n_event_types": 3,
+  "n_categories": 12,
+  "embedding_dim": 32,
+  "lstm_hidden_size": 128,
+  "lstm_layers": 2,
+  "numerical_features_dim": 6,
+  "created_at": "2026-04-07T17:15:00.890900"
+}

@@ -1,151 +1,169 @@
 {% extends 'store_base.html' %}
-{% block title %}{{ book.title }} - Nhà Sách Online{% endblock %}
+{% block title %}{{ book.title }} - P-Shop{% endblock %}
 {% block content %}
-
+<div id="app">
 <div class="container py-5">
   <nav aria-label="breadcrumb" class="mb-4">
     <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="/store/">Trang chủ</a></li>
+      <li class="breadcrumb-item"><a href="/store/">[[ t.home ]]</a></li>
       <li class="breadcrumb-item active">{{ book.title }}</li>
     </ol>
   </nav>
 
   {% if book %}
   <div class="row g-5">
-    <!-- Book Image -->
+    <!-- Image -->
     <div class="col-md-5">
-      <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-        <img src="https://loremflickr.com/600/800/book?lock={{ book.id }}" class="img-fluid" alt="{{ book.title }}">
+      <div class="position-sticky" style="top: 100px;">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+          <img src="{{ book.image_url }}" 
+               onerror="this.onerror=null; this.src='https://picsum.photos/seed/{{ book.id }}/600/800';" 
+               class="img-fluid" alt="{{ book.title }}">
+        </div>
       </div>
     </div>
 
-    <!-- Book Info -->
+    <!-- Info -->
     <div class="col-md-7">
-      <h1 class="fw-bold display-5 mb-2">{{ book.title }}</h1>
-      <p class="fs-4 text-muted mb-4"><i class="bi bi-person-circle me-2"></i>{{ book.author }}</p>
-      
-      <div class="d-flex align-items-center gap-3 mb-4">
-        <span class="display-6 fw-bold text-danger">{{ book.price }} ₫</span>
-        {% if book.stock > 0 %}
-          <span class="badge bg-success-subtle text-success border border-success px-3 py-2 rounded-pill">
-            <i class="bi bi-check-circle-fill me-1"></i>Còn {{ book.stock }} cuốn
-          </span>
-        {% else %}
-          <span class="badge bg-secondary-subtle text-secondary border border-secondary px-3 py-2 rounded-pill">
-            Hết hàng
-          </span>
-        {% endif %}
-      </div>
-
-      <div class="card bg-light border-0 rounded-4 p-4 mb-4">
-        <h5 class="fw-bold mb-3">Mô tả sản phẩm</h5>
-        <p class="text-secondary lh-lg">
-          Cuốn sách "{{ book.title }}" của tác giả {{ book.author }} là một trong những tác phẩm hay nhất mà bạn nên sở hữu. 
-          Với nội dung sâu sắc và phong cách viết lôi cuốn, tác phẩm này hứa hẹn sẽ mang lại cho người đọc những trải nghiệm tuyệt vời.
-          Dữ liệu này được lấy trực tiếp từ Book Microservice để đảm bảo tính chính xác nhất.
-        </p>
-      </div>
-
-      {% if book.stock > 0 %}
-      <div class="d-grid gap-2">
-        {% if customer %}
-        <form method="post" action="/store/add-to-cart/" class="row g-3">
-          {% csrf_token %}
-          <input type="hidden" name="book_id" value="{{ book.id }}">
-          <div class="col-auto">
-            <div class="input-group">
-              <span class="input-group-text bg-white border-end-0">Số lượng</span>
-              <input type="number" name="quantity" value="1" min="1" max="{{ book.stock }}" class="form-control border-start-0 text-center" style="width:80px;">
-            </div>
-          </div>
-          <div class="col">
-            <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold">
-              <i class="bi bi-cart-plus-fill me-2"></i>Thêm vào giỏ hàng
-            </button>
-          </div>
-        </form>
-        {% else %}
-        <a href="/store/login/" class="btn btn-outline-primary btn-lg fw-bold">
-          <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập để mua hàng
-        </a>
-        {% endif %}
-      </div>
-      {% endif %}
-    </div>
-  </div>
-
-  <!-- Reviews Section -->
-  <div class="row mt-5">
-    <div class="col-12">
-      <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-header bg-white border-0 pt-4 px-4">
-          <div class="d-flex justify-content-between align-items-center">
-            <h4 class="fw-bold mb-0">
-              <i class="bi bi-chat-left-quote-fill text-warning me-2"></i>Đánh giá & Bình luận
-            </h4>
-            <div>
-              {% if average_rating > 0 %}
-              <span class="fs-4 fw-bold text-warning">{{ average_rating }}/5</span>
-              <small class="text-muted ms-1">({{ total_reviews }} đánh giá)</small>
-              {% else %}
-              <small class="text-muted">Chưa có đánh giá</small>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-        <div class="card-body px-4 pb-4">
-          {% if customer %}
-          <form method="post" action="/store/review/{{ book.id }}/" class="mb-4 p-3 bg-light rounded-3">
-            {% csrf_token %}
-            <h6 class="fw-bold mb-3">Viết đánh giá của bạn</h6>
-            <div class="mb-3">
-              <label class="form-label">Đánh giá</label>
-              <select name="rating" class="form-select" style="width:auto">
-                <option value="5">⭐⭐⭐⭐⭐ - Tuyệt vời</option>
-                <option value="4">⭐⭐⭐⭐ - Tốt</option>
-                <option value="3">⭐⭐⭐ - Bình thường</option>
-                <option value="2">⭐⭐ - Tệ</option>
-                <option value="1">⭐ - Rất tệ</option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Bình luận</label>
-              <textarea name="comment" class="form-control" rows="3" placeholder="Chia sẻ cảm nhận của bạn về cuốn sách..."></textarea>
-            </div>
-            <button type="submit" class="btn btn-warning fw-bold"><i class="bi bi-send-fill me-1"></i> Gửi đánh giá</button>
-          </form>
+      <div class="ps-lg-4">
+        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-bold mb-3 small">{{ book.category }}</span>
+        <h1 class="fw-800 display-5 mb-2">{{ book.title }}</h1>
+        <p class="fs-4 text-muted mb-4">[[ t.author ]]: <span class="text-dark fw-semibold">{{ book.author|default:"P-Shop" }}</span></p>
+        
+        <div class="d-flex align-items-center gap-3 mb-4 flex-wrap">
+          <span class="display-6 fw-800 text-primary">{{ book.price|floatformat:0|intcomma }} ₫</span>
+          {% if book.stock > 0 %}
+            <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill small fw-bold">
+              <i class="bi bi-check-circle-fill me-1"></i>[[ t.inStock ]] ({{ book.stock }})
+            </span>
+          {% else %}
+            <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill small fw-bold">[[ t.outStock ]]</span>
           {% endif %}
-
-          {% for review in reviews %}
-          <div class="border-bottom py-3">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <div>
-                {% for i in "12345" %}
-                  {% if forloop.counter <= review.rating %}
-                    <i class="bi bi-star-fill text-warning"></i>
-                  {% else %}
-                    <i class="bi bi-star text-muted"></i>
-                  {% endif %}
-                {% endfor %}
-                <small class="text-muted ms-2">KH #{{ review.customer_id }}</small>
-              </div>
-              <small class="text-muted">{{ review.created_at|truncatechars:10 }}</small>
-            </div>
-            {% if review.comment %}<p class="mb-0 text-secondary">{{ review.comment }}</p>{% endif %}
-          </div>
-          {% empty %}
-          <p class="text-muted text-center py-3">Chưa có đánh giá nào cho sách này. Hãy là người đầu tiên!</p>
-          {% endfor %}
         </div>
+
+        <div class="card bg-white border shadow-sm rounded-4 p-4 mb-4">
+          <h5 class="fw-bold mb-3">[[ t.description ]]</h5>
+          <p class="text-secondary lh-lg mb-0">
+            [[ t.descText ]] "{{ book.title }}". [[ t.descMicro ]]
+          </p>
+        </div>
+
+        {% if book.stock > 0 %}
+        <div class="p-4 bg-primary bg-opacity-10 rounded-4 mb-4">
+          {% if customer %}
+          <form method="post" action="/store/add-to-cart/" class="row g-3" @submit="onAddToCart">
+            {% csrf_token %}
+            <input type="hidden" name="book_id" value="{{ book.id }}">
+            <div class="col-12 col-sm-auto">
+              <div class="input-group input-group-lg">
+                <span class="input-group-text bg-white border-0 small fw-bold">[[ t.qty ]]</span>
+                <input type="number" name="quantity" v-model="quantity" min="1" max="{{ book.stock }}" class="form-control border-0 text-center fw-bold" style="width:70px;">
+              </div>
+            </div>
+            <div class="col-12 col-sm">
+              <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm">
+                <i class="bi bi-cart-plus-fill me-2"></i>[[ t.addBtn ]]
+              </button>
+            </div>
+          </form>
+          {% else %}
+          <div class="text-center py-2">
+            <a href="/store/login/" class="btn btn-primary btn-lg px-5 fw-bold rounded-pill">
+              <i class="bi bi-box-arrow-in-right me-2"></i>[[ t.loginToBuy ]]
+            </a>
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
       </div>
     </div>
-  </div>
-  {% else %}
-  <div class="text-center py-5">
-    <h2 class="text-muted">Không tìm thấy thông tin sách</h2>
-    <a href="/store/" class="btn btn-primary mt-3">Quay lại trang chủ</a>
   </div>
   {% endif %}
 </div>
+</div>
+{% endblock %}
 
+{% block extra_js %}
+<script>
+const { createApp, ref, computed, onMounted } = Vue;
+
+const translations = {
+    vi: {
+        home: "Trang chủ",
+        author: "Tác giả",
+        inStock: "Còn hàng",
+        outStock: "Hết hàng",
+        description: "Mô tả sản phẩm",
+        descText: "Sản phẩm tuyệt vời mang tên",
+        descMicro: "Dữ liệu được lấy trực tiếp từ hệ thống Microservices để đảm bảo tính cập nhật và chính xác nhất.",
+        qty: "SL",
+        addBtn: "Thêm vào giỏ hàng",
+        loginToBuy: "Đăng nhập để mua hàng",
+        reviewTitle: "Đánh giá & Bình luận",
+        noReview: "Chưa có đánh giá",
+        writeReview: "Viết đánh giá của bạn",
+        ratingLabel: "Đánh giá",
+        commentLabel: "Bình luận",
+        sendReview: "Gửi đánh giá",
+        beFirst: "Chưa có đánh giá nào cho sản phẩm này. Hãy là người đầu tiên!"
+    },
+    en: {
+        home: "Home",
+        author: "Author",
+        inStock: "In Stock",
+        outStock: "Out of Stock",
+        description: "Product Description",
+        descText: "An amazing product named",
+        descMicro: "Data fetched directly from Microservices system to ensure accuracy and freshness.",
+        qty: "Qty",
+        addBtn: "Add to Cart",
+        loginToBuy: "Login to Purchase",
+        reviewTitle: "Reviews & Comments",
+        noReview: "No reviews yet",
+        writeReview: "Write your review",
+        ratingLabel: "Rating",
+        commentLabel: "Comment",
+        sendReview: "Send Review",
+        beFirst: "No reviews for this product. Be the first!"
+    }
+};
+
+createApp({
+    delimiters: ['[[', ']]'],
+    setup() {
+        const currentLang = ref(localStorage.getItem('lang') || 'vi');
+        const t = computed(() => translations[currentLang.value]);
+        const quantity = ref(1);
+        const rating = ref(5);
+        const comment = ref('');
+
+        function setLang(lang) {
+            currentLang.value = lang;
+            localStorage.setItem('lang', lang);
+            location.reload();
+        }
+
+        const csrfToken = (`; ${document.cookie}`).split(`; csrftoken=`).pop().split(';').shift();
+
+        async function trackBehavior(eventType, data) {
+            try {
+                await axios.post("/api/ai/behavior/track/", {
+                    event_type: eventType,
+                    event_data: data || {},
+                    category: '{{ book.category }}',
+                    product_id: Number('{{ book.id }}'),
+                    device: window.innerWidth <= 768 ? "mobile" : "desktop",
+                }, { headers: { "X-CSRFToken": csrfToken } });
+            } catch (err) {}
+        }
+
+        function onAddToCart() { trackBehavior('add_to_cart', { quantity: quantity.value }); }
+        function onReview() { trackBehavior('add_review', { rating: rating.value }); }
+
+        onMounted(() => { trackBehavior('product_view', { source: 'book_detail' }); });
+
+        return { currentLang, t, setLang, quantity, rating, comment, onAddToCart, onReview };
+    }
+}).mount('#app');
+</script>
 {% endblock %}

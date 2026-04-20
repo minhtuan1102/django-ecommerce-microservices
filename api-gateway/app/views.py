@@ -5,20 +5,34 @@ from django.http import JsonResponse
 import requests
 import os
 from math import ceil
+from urllib.parse import quote
 
-BOOK_SERVICE_URL = "http://book-service:8000"
+PRODUCT_SERVICE_URL = os.environ.get("PRODUCT_SERVICE_URL", "http://product-service:8000")
+BOOK_SERVICE_URL = PRODUCT_SERVICE_URL
 CART_SERVICE_URL = "http://cart-service:8000"
 CUSTOMER_SERVICE_URL = "http://customer-service:8000"
 ORDER_SERVICE_URL = "http://order-service:8000"
 STAFF_SERVICE_URL = "http://staff-service:8000"
 MANAGER_SERVICE_URL = "http://manager-service:8000"
-CATALOG_SERVICE_URL = "http://catalog-service:8000"
+CLOTHE_SERVICE_URL = PRODUCT_SERVICE_URL
+PRODUCT_CATEGORY_SERVICE_URL = PRODUCT_SERVICE_URL
 PAY_SERVICE_URL = "http://pay-service:8000"
 SHIP_SERVICE_URL = "http://ship-service:8000"
 COMMENT_RATE_SERVICE_URL = "http://comment-rate-service:8000"
 RECOMMENDER_SERVICE_URL = "http://recommender-ai-service:8000"
 AUTH_SERVICE_URL = os.environ.get("AUTH_SERVICE_URL", "http://auth-service:8000")
-CLOTHE_SERVICE_URL = "http://clothe-service:8000"
+LAPTOP_SERVICE_URL = ""
+MOBILE_SERVICE_URL = ""
+# AI Services
+BEHAVIOR_ANALYSIS_SERVICE_URL = os.environ.get(
+    "BEHAVIOR_ANALYSIS_SERVICE_URL", "http://behavior-analysis-service:8000"
+)
+CHATBOT_SERVICE_URL = os.environ.get(
+    "CHATBOT_SERVICE_URL", "http://consulting-chatbot-service:8000"
+)
+UNIFIED_AI_SERVICE_URL = os.environ.get(
+    "UNIFIED_AI_SERVICE_URL", "http://unified-ai-service:8000"
+)
 
 
 # ── HELPERS ──────────────────────────────────────────────────
@@ -62,6 +76,348 @@ def _get_cart_id(customer_id):
     except Exception:
         pass
     return None
+
+
+def _safe_get_json(url, timeout=4):
+    try:
+        r = requests.get(url, timeout=timeout)
+        if r.status_code == 200:
+            payload = r.json()
+            if isinstance(payload, list):
+                return payload
+    except Exception:
+        pass
+    return []
+
+
+def _normalize_multi_item_products(items, item_type, source):
+    normalized = []
+    for raw in items:
+        if not isinstance(raw, dict):
+            continue
+
+        if item_type == "book":
+            item_id = raw.get("id")
+            title = raw.get("title", "")
+            category = raw.get("category", "books")
+            brand_or_author = raw.get("author", "")
+            material = ""
+        elif item_type == "clothe":
+            item_id = raw.get("id")
+            title = raw.get("name", "")
+            category = raw.get("category", "fashion")
+            brand_or_author = raw.get("brand", "")
+            material = raw.get("material", "")
+        else:
+            # Generic mapping for optional item services (laptop/mobile/...)
+            item_id = raw.get("id")
+            title = raw.get("name") or raw.get("title") or ""
+            category = raw.get("category", item_type)
+            brand_or_author = raw.get("brand") or raw.get("manufacturer") or ""
+            material = raw.get("material", "")
+
+        if not item_id or not title:
+            continue
+
+        try:
+            price = float(raw.get("price", 0) or 0)
+        except (TypeError, ValueError):
+            price = 0.0
+
+        try:
+            stock = int(raw.get("stock", 0) or 0)
+        except (TypeError, ValueError):
+            stock = 0
+
+        normalized.append({
+            "id": item_id,
+            "sku": f"{item_type}-{item_id}",
+            "title": title,
+            "item_type": item_type,
+            "category": str(category),
+            "brand_or_author": str(brand_or_author),
+            "material": str(material),
+            "price": price,
+            "stock": stock,
+            "in_stock": stock > 0,
+            "source_service": source,
+            "raw": raw,
+        })
+
+    return normalized
+
+
+def _fetch_ecommerce_products():
+    products = []
+    catalog_payload = []
+    try:
+        r = requests.get(f"{PRODUCT_SERVICE_URL}/products/", timeout=5)
+        if r.status_code == 200:
+            body = r.json()
+            if isinstance(body, dict):
+                catalog_payload = body.get("products", [])
+            elif isinstance(body, list):
+                catalog_payload = body
+    except Exception:
+        catalog_payload = []
+
+    for item in catalog_payload:
+        if not isinstance(item, dict):
+            continue
+        item_id = item.get("id")
+        title = item.get("name") or item.get("title")
+        raw_item_type = str(item.get("item_type") or "general").lower()
+        item_type = "clothe" if raw_item_type == "fashion" else raw_item_type
+        category = item.get("category_name") or item.get("category") or item_type
+        sku = item.get("sku") or f"{item_type}-{item_id}"
+        metadata_obj = item.get("metadata") or {}
+
+        try:
+            price = float(item.get("price", 0) or 0)
+        except (TypeError, ValueError):
+            price = 0.0
+
+        try:
+            stock = int(item.get("stock", 0) or 0)
+        except (TypeError, ValueError):
+            stock = 0
+
+        if not item_id or not title:
+            continue
+
+        products.append(
+            {
+                "id": item_id,
+                "sku": sku,
+                "title": str(title),
+                "item_type": item_type,
+                "category": str(category),
+                "brand_or_author": str(metadata_obj.get("brand_or_author", "")),
+                "material": str(metadata_obj.get("material", "")),
+                "description": str(metadata_obj.get("description", "")),
+                "price": price,
+                "stock": stock,
+                "in_stock": stock > 0,
+                "image_url": metadata_obj.get("image_url") or _build_recommendation_image(item_type, item_id, title),
+                "detail_url": f"/store/item/{item_type}/{item_id}/",
+                "source_service": "product-service",
+                "raw": item,
+            }
+        )
+
+    return products
+
+
+def _safe_int(value, default=0):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _fetch_behavior_analysis(customer_id):
+    """Fetch behavior analysis snapshot for current customer."""
+    customer_id_int = _safe_int(customer_id, None)
+    if customer_id_int is None:
+        return {}
+
+    try:
+        r = requests.get(
+            f"{BEHAVIOR_ANALYSIS_SERVICE_URL}/api/behavior/customer/{customer_id_int}/analysis/",
+            timeout=6,
+        )
+        if r.status_code != 200:
+            return {}
+
+        payload = r.json()
+        if isinstance(payload, dict):
+            if payload.get("success") and isinstance(payload.get("data"), dict):
+                return payload["data"]
+            if isinstance(payload.get("data"), dict):
+                return payload["data"]
+            if payload.get("segment"):
+                return payload
+    except Exception:
+        pass
+
+    return {}
+
+
+def _normalize_behavior_categories(behavior_data):
+    categories = []
+    raw = behavior_data.get("predicted_categories", [])
+    if not isinstance(raw, list):
+        return categories
+
+    for item in raw:
+        if isinstance(item, dict):
+            name = str(item.get("category", "")).strip()
+            probability = item.get("probability")
+        else:
+            name = str(item).strip()
+            probability = None
+
+        if not name:
+            continue
+
+        categories.append(
+            {
+                "category": name,
+                "probability": float(probability) if isinstance(probability, (int, float)) else None,
+            }
+        )
+
+    return categories
+
+
+def _build_recommendation_image(item_type, item_id, title):
+    """Create a robust inline SVG thumbnail for recommendation cards with fixed encoding."""
+    icon_map = {
+        "book": "BOOK",
+        "clothe": "FASHION",
+        "laptop": "LAPTOP",
+        "mobile": "MOBILE",
+    }
+    label = icon_map.get(str(item_type or "").lower(), "PRODUCT")
+    safe_title = (str(title or "Product")[:28]).replace("&", "and")
+    
+    # Improved SVG styling for MVP
+    svg = (
+        f"<svg xmlns='http://www.w3.org/2000/svg' width='360' height='220' viewBox='0 0 360 220'>"
+        f"<rect width='360' height='220' fill='#f0f4f8'/>"
+        f"<rect x='20' y='20' width='320' height='180' rx='15' fill='white' stroke='#d1d9e6' stroke-width='2'/>"
+        f"<text x='40' y='60' fill='#4361ee' font-size='18' font-family='sans-serif' font-weight='bold'>{label}</text>"
+        f"<text x='40' y='100' fill='#2d3748' font-size='16' font-family='sans-serif'>{safe_title}</text>"
+        f"<text x='40' y='140' fill='#718096' font-size='14' font-family='sans-serif'>ID: #{item_id}</text>"
+        f"<rect x='40' y='160' width='80' height='4' rx='2' fill='#4361ee' fill-opacity='0.3'/>"
+        f"</svg>"
+    )
+    # Proper percent-encoding
+    return f"data:image/svg+xml,{quote(svg)}"
+
+
+def _fetch_single_item_detail(item_type, item_id):
+    """Fetch item detail from unified product-service."""
+    try:
+        r = requests.get(f"{PRODUCT_SERVICE_URL}/products/{item_id}/", timeout=4)
+        if r.status_code == 200:
+            return r.json()
+    except Exception:
+        pass
+    return None
+
+
+def _build_ai_recommendations(products, behavior_data, limit=8, item_type="all", query=""):
+    """Score and return personalized multi-item recommendations."""
+    normalized_categories = _normalize_behavior_categories(behavior_data)
+    category_keywords = {
+        c["category"].strip().lower()
+        for c in normalized_categories
+        if c.get("category")
+    }
+    segment = str(behavior_data.get("segment", "Regular") or "Regular")
+    query_lower = str(query or "").strip().lower()
+
+    scored = []
+    for product in products:
+        if item_type != "all" and product.get("item_type") != item_type:
+            continue
+
+        title = str(product.get("title", ""))
+        category = str(product.get("category", ""))
+        search_space = f"{title} {category} {product.get('brand_or_author', '')}".lower()
+        if query_lower and query_lower not in search_space:
+            continue
+
+        in_stock = bool(product.get("in_stock"))
+        price = float(product.get("price", 0) or 0)
+        stock = _safe_int(product.get("stock"), 0)
+        item_type_value = str(product.get("item_type", "general"))
+        if item_type_value == "fashion":
+            item_type_value = "clothe"
+
+        score = 0.0
+        score += 30.0 if in_stock else -60.0
+        score += min(max(stock, 0), 30) * 0.5
+
+        if segment == "VIP":
+            if price >= 300000:
+                score += 10.0
+        elif segment == "New":
+            if 50000 <= price <= 700000:
+                score += 10.0
+        elif segment == "Churned":
+            if price <= 300000:
+                score += 12.0
+        else:
+            if 70000 <= price <= 900000:
+                score += 8.0
+
+        if category_keywords:
+            lowered_title = title.lower()
+            lowered_category = category.lower()
+            if any(k in lowered_title or k in lowered_category for k in category_keywords):
+                score += 25.0
+
+        if item_type_value in ("book", "clothe"):
+            score += 4.0
+
+        recommendation = {
+            **product,
+            "ai_score": round(score, 2),
+            "detail_url": f"/store/item/{item_type_value}/{product.get('id')}/",
+            "image_url": _build_recommendation_image(item_type_value, product.get("id"), title),
+            "add_to_cart_payload": None,
+        }
+
+        if item_type_value == "book":
+            recommendation["add_to_cart_payload"] = {"book_id": product.get("id")}
+        elif item_type_value == "clothe":
+            recommendation["add_to_cart_payload"] = {"clothe_id": product.get("id")}
+
+        scored.append(recommendation)
+
+    scored.sort(key=lambda x: x.get("ai_score", 0), reverse=True)
+    return scored[: max(1, min(limit, 24))]
+
+
+def ecommerce_products_api(request):
+    """Unified multi-item catalog API for ecommerce and AI ingestion."""
+    if request.method != "GET":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    q = request.GET.get("q", "").strip().lower()
+    item_type = request.GET.get("type", "all").strip().lower()
+    stock_filter = request.GET.get("stock", "all").strip().lower()
+
+    products = _fetch_ecommerce_products()
+    filtered = []
+
+    for p in products:
+        if item_type != "all" and p.get("item_type") != item_type:
+            continue
+
+        if stock_filter == "in_stock" and not p.get("in_stock"):
+            continue
+        if stock_filter == "out_of_stock" and p.get("in_stock"):
+            continue
+
+        if q:
+            haystack = " ".join([
+                str(p.get("title", "")),
+                str(p.get("category", "")),
+                str(p.get("brand_or_author", "")),
+            ]).lower()
+            if q not in haystack:
+                continue
+
+        filtered.append(p)
+
+    return JsonResponse({
+        "total": len(filtered),
+        "item_types": sorted({p.get("item_type") for p in filtered if p.get("item_type")}),
+        "products": filtered,
+    })
 
 
 # ── ADMIN VIEWS ──────────────────────────────────────────────
@@ -211,10 +567,13 @@ def view_cart(request, customer_id):
 # ── STOREFRONT VIEWS ─────────────────────────────────────────
 
 def store_home(request):
-    books = []
+    products = []
     recommendations = []
+    ai_recommendations = []
+    behavior_data = {}
+    chatbot_health_status = "unknown"
     q = request.GET.get("q", "").strip()
-    author = request.GET.get("author", "").strip()
+    item_type = request.GET.get("item_type", request.GET.get("author", "")).strip().lower()
     stock = request.GET.get("stock", "all").strip()
     sort = request.GET.get("sort", "featured").strip()
     min_price_raw = request.GET.get("min_price", "").strip()
@@ -239,31 +598,24 @@ def store_home(request):
     except ValueError:
         page = 1
 
-    try:
-        r = requests.get(f"{BOOK_SERVICE_URL}/books/", timeout=3)
-        books = r.json()
-        if not isinstance(books, list):
-            books = []
-    except Exception:
-        pass
+    products = _fetch_ecommerce_products()
+    all_item_types = sorted({str(p.get("item_type", "")).strip().lower() for p in products if p.get("item_type")})
 
-    all_authors = sorted({str(b.get("author", "")).strip() for b in books if b.get("author")})
-
-    filtered_books = []
+    filtered_products = []
     q_lower = q.lower()
-    author_lower = author.lower()
-    for book in books:
-        title = str(book.get("title", ""))
-        writer = str(book.get("author", ""))
-        stock_value = int(book.get("stock", 0) or 0)
+    for product in products:
+        title = str(product.get("title", ""))
+        category = str(product.get("category", ""))
+        item_type_value = str(product.get("item_type", "")).lower()
+        stock_value = int(product.get("stock", 0) or 0)
         try:
-            price_value = float(book.get("price", 0) or 0)
+            price_value = float(product.get("price", 0) or 0)
         except (TypeError, ValueError):
             price_value = 0.0
 
-        if q_lower and q_lower not in title.lower() and q_lower not in writer.lower():
+        if q_lower and q_lower not in title.lower() and q_lower not in category.lower() and q_lower not in item_type_value:
             continue
-        if author_lower and author_lower != writer.lower():
+        if item_type and item_type != item_type_value:
             continue
         if stock == "in_stock" and stock_value <= 0:
             continue
@@ -273,21 +625,21 @@ def store_home(request):
             continue
         if max_price is not None and price_value > max_price:
             continue
-        filtered_books.append(book)
+        filtered_products.append(product)
 
     if sort == "price_asc":
-        filtered_books.sort(key=lambda x: float(x.get("price", 0) or 0))
+        filtered_products.sort(key=lambda x: float(x.get("price", 0) or 0))
     elif sort == "price_desc":
-        filtered_books.sort(key=lambda x: float(x.get("price", 0) or 0), reverse=True)
+        filtered_products.sort(key=lambda x: float(x.get("price", 0) or 0), reverse=True)
     elif sort == "title_asc":
-        filtered_books.sort(key=lambda x: str(x.get("title", "")).lower())
+        filtered_products.sort(key=lambda x: str(x.get("title", "")).lower())
     elif sort == "title_desc":
-        filtered_books.sort(key=lambda x: str(x.get("title", "")).lower(), reverse=True)
+        filtered_products.sort(key=lambda x: str(x.get("title", "")).lower(), reverse=True)
     elif sort == "newest":
-        filtered_books.sort(key=lambda x: int(x.get("id", 0) or 0), reverse=True)
+        filtered_products.sort(key=lambda x: int(x.get("id", 0) or 0), reverse=True)
     else:
         # Featured: in-stock first, then high stock, then newest.
-        filtered_books.sort(
+        filtered_products.sort(
             key=lambda x: (
                 int((x.get("stock", 0) or 0) <= 0),
                 -int(x.get("stock", 0) or 0),
@@ -296,14 +648,14 @@ def store_home(request):
         )
 
     page_size = 12
-    total_results = len(filtered_books)
+    total_results = len(filtered_products)
     total_pages = max(1, ceil(total_results / page_size))
     if page > total_pages:
         page = total_pages
 
     start = (page - 1) * page_size
     end = start + page_size
-    paginated_books = filtered_books[start:end]
+    paginated_products = filtered_products[start:end]
 
     base_filters = request.GET.copy()
     if "page" in base_filters:
@@ -324,17 +676,41 @@ def store_home(request):
                 recommendations = r.json().get("recommendations", [])
         except Exception:
             pass
+
+        behavior_data = _fetch_behavior_analysis(customer.get("id"))
+        ai_recommendations = _build_ai_recommendations(
+            _fetch_ecommerce_products(),
+            behavior_data,
+            limit=8,
+            item_type="all",
+            query=q,
+        )
+
+        try:
+            r_health = requests.get(f"{CHATBOT_SERVICE_URL}/api/chat/health/", timeout=4)
+            if r_health.status_code == 200:
+                payload = r_health.json()
+                chatbot_health_status = str(payload.get("status", "healthy"))
+            else:
+                chatbot_health_status = "unhealthy"
+        except Exception:
+            chatbot_health_status = "unreachable"
+
     return render(request, "store_home.html", {
-        "books": paginated_books,
+        "books": paginated_products,
         "customer": customer,
         "recommendations": recommendations,
-        "authors": all_authors,
-        "total_books": len(books),
+        "ai_recommendations": ai_recommendations,
+        "behavior_data": behavior_data,
+        "predicted_categories": _normalize_behavior_categories(behavior_data),
+        "chatbot_health_status": chatbot_health_status,
+        "authors": all_item_types,
+        "total_books": len(products),
         "total_results": total_results,
-        "in_stock_count": sum(1 for b in books if int(b.get("stock", 0) or 0) > 0),
+        "in_stock_count": sum(1 for b in products if int(b.get("stock", 0) or 0) > 0),
         "filters": {
             "q": q,
-            "author": author,
+            "author": item_type,
             "stock": stock,
             "sort": sort,
             "min_price": min_price_raw,
@@ -350,6 +726,49 @@ def store_home(request):
         "query_without_page": query_without_page,
         "current_querystring": current_querystring,
     })
+
+
+def store_ai_assistant(request):
+    """Full AI assistant storefront: behavior insights + chatbot + multi-item recommendations."""
+    customer = _get_store_customer(request)
+    if not customer:
+        messages.error(request, "Vui lòng đăng nhập để dùng trợ lý AI.")
+        return redirect("store_login")
+
+    behavior_data = _fetch_behavior_analysis(customer.get("id"))
+    predicted_categories = _normalize_behavior_categories(behavior_data)
+    products = _fetch_ecommerce_products()
+    ai_recommendations = _build_ai_recommendations(
+        products,
+        behavior_data,
+        limit=10,
+        item_type="all",
+        query="",
+    )
+
+    chatbot_health_status = "unknown"
+    try:
+        r = requests.get(f"{CHATBOT_SERVICE_URL}/api/chat/health/", timeout=4)
+        if r.status_code == 200:
+            payload = r.json()
+            chatbot_health_status = str(payload.get("status", "healthy"))
+        else:
+            chatbot_health_status = "unhealthy"
+    except Exception:
+        chatbot_health_status = "unreachable"
+
+    return render(
+        request,
+        "store_ai_assistant.html",
+        {
+            "customer": customer,
+            "behavior_data": behavior_data,
+            "predicted_categories": predicted_categories,
+            "chatbot_health_status": chatbot_health_status,
+            "ai_recommendations": ai_recommendations,
+            "recommendation_count": len(ai_recommendations),
+        },
+    )
 
 
 def store_login(request):
@@ -948,162 +1367,6 @@ def store_checkout(request):
     
     return redirect("store_cart")
 
-    # 1. Get cart items
-    try:
-        r_cart = requests.get(f"{CART_SERVICE_URL}/carts/{customer['id']}/", timeout=3)
-        cart_data = r_cart.json()
-        raw_items = cart_data.get("items", [])
-    except Exception as e:
-        messages.error(request, f"Lỗi lấy thông tin giỏ hàng: {e}")
-        return redirect("store_cart")
-
-    if not raw_items:
-        messages.error(request, "Giỏ hàng trống.")
-        return redirect("store_home")
-
-    # 2. Pre-check stock and gather prices
-    items_to_order = []
-    total_price = 0
-    try:
-        books_r = requests.get(f"{BOOK_SERVICE_URL}/books/", timeout=3)
-        books_map = {b["id"]: b for b in books_r.json()}
-        
-        for ri in raw_items:
-            book = books_map.get(ri["book_id"])
-            if not book:
-                messages.error(request, f"Sách #{ri['book_id']} không tồn tại.")
-                return redirect("store_cart")
-            
-            if book["stock"] < ri["quantity"]:
-                messages.error(request, f"Sách '{book['title']}' không đủ hàng (Còn lại: {book['stock']}).")
-                return redirect("store_cart")
-            
-            price = float(book["price"])
-            items_to_order.append({
-                "book_id": ri["book_id"],
-                "quantity": ri["quantity"],
-                "price": price,
-                "title": book["title"]
-            })
-            total_price += price * ri["quantity"]
-    except Exception as e:
-        messages.error(request, f"Lỗi kiểm tra kho: {e}")
-        return redirect("store_cart")
-
-    # 3. Reduce stock first (Professional approach: reserve/deduct before confirming order)
-    reduced_items = []
-    stock_failed = False
-    for item in items_to_order:
-        try:
-            res = requests.post(f"{BOOK_SERVICE_URL}/books/{item['book_id']}/reduce-stock/", 
-                                json={"quantity": item["quantity"]}, timeout=3)
-            if res.status_code == 200:
-                reduced_items.append(item)
-            else:
-                stock_failed = True
-                error_msg = res.json().get("error", "Lỗi không xác định")
-                messages.error(request, f"Không thể trừ kho cho '{item['title']}': {error_msg}")
-                break
-        except Exception as e:
-            stock_failed = True
-            messages.error(request, f"Lỗi kết nối khi trừ kho: {e}")
-            break
-
-    # If stock reduction failed mid-way, in a perfect world we would roll back (increase stock back).
-    # For this project, we'll stop and notify the user.
-    if stock_failed:
-        # Simple rollback for already reduced items
-        for ri in reduced_items:
-            try:
-                # We can't use reduce-stock with negative, so we use patch if available or just leave it.
-                # Since book-service patch exists, we could use it to add back.
-                book_r = requests.get(f"{BOOK_SERVICE_URL}/books/{ri['book_id']}/", timeout=3)
-                curr_stock = book_r.json().get("stock", 0)
-                requests.patch(f"{BOOK_SERVICE_URL}/books/{ri['book_id']}/", 
-                               json={"stock": curr_stock + ri["quantity"]}, timeout=3)
-            except Exception:
-                pass
-        return redirect("store_cart")
-
-    # 4. Create the Order
-    province = request.POST.get("province", "Khác")
-    address_detail = request.POST.get("address_detail", "")
-    full_address = f"{address_detail}, {province}"
-    payment_method = request.POST.get("payment_method", "cod")
-    
-    # Simple shipping fee logic
-    shipping_fee = 0
-    if province not in ["Hà Nội", "Hồ Chí Minh"]:
-        shipping_fee = 30000
-    
-    order_data = {
-        "customer_id": customer["id"],
-        "total_price": total_price,
-        "shipping_fee": shipping_fee,
-        "shipping_address": full_address,
-        "payment_method": payment_method,
-        "items": items_to_order
-    }
-    
-    try:
-        r_order = requests.post(f"{ORDER_SERVICE_URL}/orders/", json=order_data, timeout=5)
-        if r_order.status_code == 201:
-            order_resp = r_order.json()
-
-            # 5. Clear cart using the new endpoint
-            try:
-                requests.delete(f"{CART_SERVICE_URL}/carts/{customer['id']}/clear/", timeout=3)
-            except Exception:
-                pass
-            
-            # 6. VNPay Simulation Logic
-            if payment_method == 'vnpay':
-                # Create a temporary payment record first
-                try:
-                    pay_res = requests.post(f"{PAY_SERVICE_URL}/payments/", json={
-                        "order_id": order_resp.get("id"),
-                        "customer_id": customer["id"],
-                        "amount": order_resp.get("grand_total"),
-                        "method": "vnpay",
-                    }, timeout=3)
-                    if pay_res.status_code == 201:
-                        pay_data = pay_res.json()
-                        # Redirect to simulation page
-                        return render(request, "store_vnpay_sim.html", {
-                            "order": order_resp,
-                            "payment": pay_data
-                        })
-                except Exception:
-                    pass
-
-            messages.success(request, "Đặt hàng thành công! Hệ thống Saga đang xử lý đơn hàng của bạn.")
-            return render(request, "store_success.html", {"customer": customer, "order": order_resp})
-
-        else:
-            # If order creation fails, we MUST roll back stock
-            for ri in reduced_items:
-                try:
-                    book_r = requests.get(f"{BOOK_SERVICE_URL}/books/{ri['book_id']}/", timeout=3)
-                    curr_stock = book_r.json().get("stock", 0)
-                    requests.patch(f"{BOOK_SERVICE_URL}/books/{ri['book_id']}/", 
-                                   json={"stock": curr_stock + ri["quantity"]}, timeout=3)
-                except Exception:
-                    pass
-            messages.error(request, f"Lỗi tạo đơn hàng: {r_order.text}")
-    except Exception as e:
-        # Roll back stock on connection error
-        for ri in reduced_items:
-            try:
-                book_r = requests.get(f"{BOOK_SERVICE_URL}/books/{ri['book_id']}/", timeout=3)
-                curr_stock = book_r.json().get("stock", 0)
-                requests.patch(f"{BOOK_SERVICE_URL}/books/{ri['book_id']}/", 
-                               json={"stock": curr_stock + ri["quantity"]}, timeout=3)
-            except Exception:
-                pass
-        messages.error(request, f"Lỗi kết nối order-service: {e}")
-    
-    return redirect("store_cart")
-
 
 def store_orders(request):
     customer = _get_store_customer(request)
@@ -1430,16 +1693,16 @@ def admin_catalog_list(request):
             "description": request.POST.get("description", ""),
         }
         try:
-            r = requests.post(f"{CATALOG_SERVICE_URL}/categories/", json=data, timeout=3)
+            r = requests.post(f"{PRODUCT_CATEGORY_SERVICE_URL}/categories/", json=data, timeout=3)
             if r.status_code in (200, 201):
                 messages.success(request, "Thêm danh mục thành công!")
             else:
                 messages.error(request, f"Lỗi: {r.text}")
         except Exception as e:
-            messages.error(request, f"Không kết nối được catalog-service: {e}")
+            messages.error(request, f"Không kết nối được product-service: {e}")
         return redirect("admin_catalog_list")
     try:
-        r = requests.get(f"{CATALOG_SERVICE_URL}/categories/", timeout=3)
+        r = requests.get(f"{PRODUCT_CATEGORY_SERVICE_URL}/categories/", timeout=3)
         categories = r.json()
         if not isinstance(categories, list):
             categories = []
@@ -1600,3 +1863,296 @@ def store_clothe_detail(request, clothe_id):
     except Exception:
         pass
     return render(request, "store_clothe_detail.html", {"clothe": clothe, "customer": _get_store_customer(request)})
+
+
+def store_item_detail(request, item_type, item_id):
+    """Generic detail page for any item type used by AI recommendation cards."""
+    customer = _get_store_customer(request)
+    item_type = str(item_type or "").lower()
+    item = None
+    error = ""
+
+    try:
+        item = _fetch_single_item_detail(item_type, item_id)
+        if not item:
+            error = "Không tìm thấy thông tin chi tiết sản phẩm."
+    except Exception as e:
+        error = str(e)
+
+    if item_type == "book" and item:
+        item_name = item.get("title") or "Book"
+        item_price = item.get("price") or 0
+        item_stock = _safe_int(item.get("stock"), 0)
+        item_category = item.get("category") or "book"
+    elif item_type == "clothe" and item:
+        item_name = item.get("name") or "Clothe"
+        item_price = item.get("price") or 0
+        item_stock = _safe_int(item.get("stock"), 0)
+        item_category = item.get("category") or "fashion"
+    elif item:
+        item_name = item.get("name") or item.get("title") or "Product"
+        item_price = item.get("price") or 0
+        item_stock = _safe_int(item.get("stock"), 0)
+        item_category = item.get("category") or item_type
+    else:
+        item_name = ""
+        item_price = 0
+        item_stock = 0
+        item_category = ""
+
+    metadata = (item or {}).get("metadata") or {}
+    item_description = metadata.get("description") or (item or {}).get("description") or "Mô tả sản phẩm đang được cập nhật."
+    item_image_url = metadata.get("image_url") or _build_recommendation_image(item_type, item_id, item_name)
+
+    payload = {
+        "id": item_id,
+        "type": item_type,
+        "name": item_name,
+        "price": item_price,
+        "stock": item_stock,
+        "in_stock": item_stock > 0,
+        "category": item_category,
+        "description": item_description,
+        "raw": item or {},
+        "image_url": item_image_url,
+    }
+
+    return render(
+        request,
+        "store_item_detail.html",
+        {
+            "customer": customer,
+            "item": payload,
+            "error": error,
+        },
+    )
+
+
+# ── AI SERVICES PROXY VIEWS ──────────────────────────────────
+
+def ai_behavior_analysis_proxy(request):
+    """Proxy requests to Behavior Analysis Service (8014)"""
+    customer = _get_store_customer(request)
+    if not customer:
+        return JsonResponse({"error": "Authentication required"}, status=401)
+    
+    if request.method == "GET":
+        try:
+            # Forward GET request for customer analysis
+            r = requests.get(
+                f"{BEHAVIOR_ANALYSIS_SERVICE_URL}/api/behavior/customer/{_safe_int(customer['id'])}/analysis/",
+                headers={"Authorization": request.headers.get("Authorization", "")},
+                timeout=5
+            )
+            return JsonResponse(r.json(), status=r.status_code)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    
+    return JsonResponse({"error": "Method not allowed"}, status=405)
+
+
+def ai_behavior_track_proxy(request):
+    """Proxy tracking events from storefront to behavior-analysis-service."""
+    customer = _get_store_customer(request)
+    if not customer:
+        return JsonResponse({"error": "Authentication required"}, status=401)
+
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    try:
+        import json
+
+        body = {}
+        if request.body:
+            body = json.loads(request.body)
+
+        payload = {
+            "customer_id": _safe_int(customer.get("id"), 0),
+            "event_type": body.get("event_type", "page_view"),
+            "event_data": body.get("event_data", {}),
+            "session_id": body.get("session_id") or request.session.session_key,
+            "device": body.get("device", "desktop"),
+            "category": body.get("category"),
+            "product_id": body.get("product_id"),
+        }
+
+        r = requests.post(
+            f"{BEHAVIOR_ANALYSIS_SERVICE_URL}/api/behavior/track/",
+            json=payload,
+            headers={"Authorization": request.headers.get("Authorization", "")},
+            timeout=5,
+        )
+        return JsonResponse(r.json(), status=r.status_code)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+def ai_recommendations_proxy(request):
+    """Return personalized multi-item recommendations from real catalog + behavior data."""
+    customer = _get_store_customer(request)
+    if not customer:
+        return JsonResponse({"error": "Authentication required"}, status=401)
+
+    if request.method != "GET":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    item_type = request.GET.get("type", "all").strip().lower()
+    query = request.GET.get("q", "").strip()
+    limit = _safe_int(request.GET.get("limit", 8), 8)
+
+    behavior_data = _fetch_behavior_analysis(customer.get("id"))
+    products = _fetch_ecommerce_products()
+    recommendations = _build_ai_recommendations(
+        products,
+        behavior_data,
+        limit=limit,
+        item_type=item_type if item_type else "all",
+        query=query,
+    )
+
+    return JsonResponse(
+        {
+            "success": True,
+            "data": {
+                "customer_id": customer.get("id"),
+                "segment": behavior_data.get("segment", "Regular"),
+                "predicted_categories": _normalize_behavior_categories(behavior_data),
+                "total": len(recommendations),
+                "recommendations": recommendations,
+            },
+        },
+        status=200,
+    )
+
+
+def ai_chatbot_proxy(request):
+    """Proxy requests to Consulting Chatbot Service (8015)"""
+    customer = _get_store_customer(request)
+    if not customer:
+        return JsonResponse({"error": "Authentication required"}, status=401)
+    
+    if request.method == "POST":
+        try:
+            import json
+            body = json.loads(request.body)
+            # Add customer_id to the chat message
+            body["customer_id"] = customer["id"]
+            
+            r = requests.post(
+                f"{CHATBOT_SERVICE_URL}/api/chat/message/",
+                json=body,
+                headers={"Authorization": request.headers.get("Authorization", "")},
+                timeout=10
+            )
+            return JsonResponse(r.json(), status=r.status_code)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    
+    return JsonResponse({"error": "Method not allowed"}, status=405)
+
+
+def ai_chatbot_health(request):
+    """Health check endpoint for Consulting Chatbot Service"""
+    try:
+        r = requests.get(f"{CHATBOT_SERVICE_URL}/api/chat/health/", timeout=3)
+        if r.status_code == 200:
+            return JsonResponse({"status": "healthy", "service": "consulting-chatbot"}, status=200)
+        else:
+            return JsonResponse({"status": "unhealthy"}, status=r.status_code)
+    except Exception as e:
+        return JsonResponse({"error": str(e), "service": "consulting-chatbot"}, status=503)
+
+
+@user_passes_test(is_staff_check, login_url='/admin/login/')
+def ai_chatbot_index_status(request):
+    """Admin-only proxy: check chatbot KB index status."""
+    if request.method != "GET":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    try:
+        r = requests.get(f"{CHATBOT_SERVICE_URL}/api/chat/index/status/", timeout=6)
+        return JsonResponse(r.json(), status=r.status_code)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@user_passes_test(is_staff_check, login_url='/admin/login/')
+def ai_chatbot_rebuild_index(request):
+    """Admin-only proxy: trigger chatbot KB index rebuild."""
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    try:
+        import json
+
+        body = {}
+        if request.body:
+            body = json.loads(request.body)
+
+        payload = {
+            "force": bool(body.get("force", True)),
+            "include_product_sync": bool(body.get("include_product_sync", True)),
+        }
+
+        r = requests.post(
+            f"{CHATBOT_SERVICE_URL}/api/chat/index/rebuild/",
+            json=payload,
+            timeout=30,
+        )
+        return JsonResponse(r.json(), status=r.status_code)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+def _proxy_unified_ai_post(request, endpoint: str, timeout: int = 30):
+    import json
+
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    body = {}
+    if request.body:
+        body = json.loads(request.body)
+
+    try:
+        r = requests.post(
+            f"{UNIFIED_AI_SERVICE_URL}{endpoint}",
+            json=body,
+            headers={"Authorization": request.headers.get("Authorization", "")},
+            timeout=timeout,
+        )
+        return JsonResponse(r.json(), status=r.status_code)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+def ai_service_health_proxy(request):
+    if request.method != "GET":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    try:
+        r = requests.get(f"{UNIFIED_AI_SERVICE_URL}/api/health/", timeout=5)
+        return JsonResponse(r.json(), status=r.status_code)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+def ai_service_generate_data_proxy(request):
+    return _proxy_unified_ai_post(request, "/api/data/generate/", timeout=30)
+
+
+def ai_service_train_models_proxy(request):
+    return _proxy_unified_ai_post(request, "/api/models/train/", timeout=3600)
+
+
+def ai_service_build_graph_proxy(request):
+    return _proxy_unified_ai_post(request, "/api/graph/build/", timeout=300)
+
+
+def ai_service_rag_query_proxy(request):
+    return _proxy_unified_ai_post(request, "/api/rag/query/", timeout=120)
+
+
+def ai_service_run_pipeline_proxy(request):
+    return _proxy_unified_ai_post(request, "/api/pipeline/run/", timeout=7200)

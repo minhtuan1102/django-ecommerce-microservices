@@ -2,3 +2,7 @@ django
 djangorestframework
 requests
 psycopg2-binary
+tensorflow>=2.15.0
+numpy>=1.24.3
+pandas>=2.0.0
+scikit-learn>=1.2.2

@@ -1,0 +1,68 @@
+{
+  "nodes": {
+    "product": {
+      "name": "Product",
+      "type": "root",
+      "category": "products",
+      "aliases": ["san pham", "hang hoa", "catalog"]
+    },
+    "electronics": {
+      "name": "Electronics",
+      "type": "category",
+      "category": "products",
+      "aliases": ["dien tu", "do cong nghe"]
+    },
+    "mobile": {
+      "name": "Mobile",
+      "type": "subcategory",
+      "category": "products",
+      "aliases": ["dien thoai", "smartphone"]
+    },
+    "laptop": {
+      "name": "Laptop",
+      "type": "subcategory",
+      "category": "products",
+      "aliases": ["notebook", "may tinh xach tay"]
+    },
+    "computer": {
+      "name": "Computer",
+      "type": "subcategory",
+      "category": "products",
+      "aliases": ["pc", "desktop"]
+    },
+    "tablet": {
+      "name": "Tablet",
+      "type": "subcategory",
+      "category": "products",
+      "aliases": ["ipad", "may tinh bang"]
+    },
+    "accessory": {
+      "name": "Accessory",
+      "type": "subcategory",
+      "category": "products",
+      "aliases": ["phu kien", "keyboard", "mouse"]
+    },
+    "books": {
+      "name": "Books",
+      "type": "category",
+      "category": "products",
+      "aliases": ["sach"]
+    },
+    "fashion": {
+      "name": "Fashion",
+      "type": "category",
+      "category": "products",
+      "aliases": ["thoi trang"]
+    }
+  },
+  "edges": [
+    {"source": "product", "target": "electronics", "relation": "contains"},
+    {"source": "product", "target": "books", "relation": "contains"},
+    {"source": "product", "target": "fashion", "relation": "contains"},
+    {"source": "electronics", "target": "mobile", "relation": "contains"},
+    {"source": "electronics", "target": "laptop", "relation": "contains"},
+    {"source": "electronics", "target": "computer", "relation": "contains"},
+    {"source": "electronics", "target": "tablet", "relation": "contains"},
+    {"source": "electronics", "target": "accessory", "relation": "contains"}
+  ]
+}

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>{% block title %}Nhà Sách Online - Premium Bookstore{% endblock %}</title>
+    <title>{% block title %}P-shop - Premium Store{% endblock %}</title>
     
     <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,16 +32,17 @@
 
         /* Modern Navbar */
         .navbar {
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid rgba(0,0,0,0.05);
-            padding: 1rem 0;
+            padding: 0.75rem 0;
             transition: var(--transition);
+            z-index: 1030;
         }
 
         .navbar-brand {
             font-weight: 800;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -49,11 +50,12 @@
         }
 
         .nav-link {
-            font-weight: 500;
-            color: #555 !important;
+            font-weight: 600;
+            color: #444 !important;
             padding: 0.5rem 1rem !important;
             border-radius: 0.5rem;
             transition: var(--transition);
+            font-size: 0.95rem;
         }
 
         .nav-link:hover {
@@ -64,6 +66,29 @@
         .nav-link.active {
             color: var(--primary-color) !important;
             background: rgba(67, 97, 238, 0.1);
+        }
+
+        @media (max-width: 991.98px) {
+            .navbar-collapse {
+                background: white;
+                margin: 0 -1rem;
+                padding: 1.5rem;
+                border-bottom: 1px solid rgba(0,0,0,0.05);
+                box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            }
+            .hero-section {
+                padding: 60px 0 40px;
+                border-radius: 0 0 2rem 2rem;
+            }
+        }
+
+        /* Typography */
+        .fw-800 { font-weight: 800; }
+        .fw-700 { font-weight: 700; }
+
+        /* Content spacing */
+        main {
+            min-height: 60vh;
         }
 
         /* Hero Section Styling */
@@ -131,15 +156,53 @@
         .book-card {
             border: none;
             background: white;
-            border-radius: 1.5rem;
+            border-radius: 1.25rem;
             transition: var(--transition);
             height: 100%;
-            border: 1px solid rgba(0,0,0,0.03);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(0,0,0,0.05);
+            overflow: hidden;
         }
 
         .book-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .book-img-wrapper {
+            position: relative;
+            width: 100%;
+            padding-top: 130%; /* 3:4 Aspect Ratio */
+            background: #f8f9fa;
+            overflow: hidden;
+        }
+
+        .book-img-wrapper img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .book-card:hover .book-img-wrapper img {
+            transform: scale(1.05);
+        }
+
+        .badge-stock {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            z-index: 2;
+            padding: 0.35rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            backdrop-filter: blur(4px);
         }
 
         /* Footer */
@@ -191,7 +254,7 @@
     <div class="container">
         <a class="navbar-brand d-flex align-items-center gap-2" href="/store/">
             <i class="bi bi-intersect fs-3"></i>
-            <span>BOOKSTORE</span>
+            <span>P-SHOP</span>
         </a>
         <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#storeNav">
             <span class="navbar-toggler-icon"></span>
@@ -199,10 +262,19 @@
         <div class="collapse navbar-collapse" id="storeNav">
             <ul class="navbar-nav mx-auto">
                 <li class="nav-item">
-                    <a class="nav-link {% block nav_home %}{% endblock %}" href="/store/">Trang chủ</a>
+                    <a class="nav-link {% block nav_home %}{% endblock %}" href="/store/">Tất cả sản phẩm</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link {% block nav_clothes %}{% endblock %}" href="/store/clothes/">Thời trang</a>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Ngành hàng</a>
+                    <ul class="dropdown-menu shadow-sm border-0 rounded-3 mt-2">
+                        <li><a class="dropdown-item" href="/store/?item_type=mobile">Điện thoại</a></li>
+                        <li><a class="dropdown-item" href="/store/?item_type=laptop">Laptop</a></li>
+                        <li><a class="dropdown-item" href="/store/?item_type=fashion">Thời trang</a></li>
+                        <li><a class="dropdown-item" href="/store/?item_type=home">Gia dụng</a></li>
+                        <li><a class="dropdown-item" href="/store/?item_type=beauty">Làm đẹp</a></li>
+                        <li><a class="dropdown-item" href="/store/?item_type=sports">Thể thao</a></li>
+                        <li><a class="dropdown-item" href="/store/?item_type=book">Sách</a></li>
+                    </ul>
                 </li>
                 {% if customer %}
                 <li class="nav-item">
@@ -210,10 +282,22 @@
                 </li>
                 {% endif %}
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Khám phá</a>
+                    <a class="nav-link {% block nav_ai %}{% endblock %}" href="/store/ai-assistant/">AI gợi ý</a>
                 </li>
             </ul>
             <div class="d-flex align-items-center gap-3">
+                <!-- Language Switcher -->
+                <div class="dropdown me-2">
+                    <button class="btn btn-link nav-link dropdown-toggle border-0 shadow-none" data-bs-toggle="dropdown">
+                        <i class="bi bi-translate me-1"></i>
+                        <span class="small fw-bold">[[ currentLang === 'vi' ? 'VN' : 'EN' ]]</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+                        <li><a class="dropdown-item small fw-bold" href="#" @click.prevent="setLang('vi')">Tiếng Việt (Có dấu)</a></li>
+                        <li><a class="dropdown-item small fw-bold" href="#" @click.prevent="setLang('en')">English</a></li>
+                    </ul>
+                </div>
+
                 {% if customer %}
                     <a href="/store/cart/" class="nav-link cart-wrapper p-2">
                         <i class="bi bi-handbag fs-4"></i>
@@ -274,9 +358,9 @@
             <div class="col-lg-4">
                 <a class="navbar-brand text-light d-flex align-items-center gap-2 mb-3" href="/store/">
                     <i class="bi bi-intersect fs-3"></i>
-                    <span>BOOKSTORE</span>
+                    <span>P-SHOP</span>
                 </a>
-                <p class="small opacity-75">Hệ thống nhà sách trực tuyến hiện đại được xây dựng trên kiến trúc Microservices. Mang đến trải nghiệm mua sắm mượt mà và an toàn.</p>
+                <p class="small opacity-75">Hệ thống cửa hàng trực tuyến hiện đại được xây dựng trên kiến trúc Microservices. Mang đến trải nghiệm mua sắm mượt mà và an toàn.</p>
                 <div class="d-flex gap-3 mt-4">
                     <a href="#" class="fs-5 opacity-50"><i class="bi bi-facebook"></i></a>
                     <a href="#" class="fs-5 opacity-50"><i class="bi bi-instagram"></i></a>
@@ -286,10 +370,11 @@
             <div class="col-lg-2 offset-lg-1">
                 <h6 class="text-white fw-bold mb-4">Dịch vụ</h6>
                 <ul class="list-unstyled d-flex flex-column gap-2 small">
-                    <li><a href="#">Về chúng tôi</a></li>
-                    <li><a href="#">Chính sách bảo mật</a></li>
-                    <li><a href="#">Điều khoản sử dụng</a></li>
-                    <li><a href="#">Liên hệ</a></li>
+                    <li><a href="/store/">Tất cả sản phẩm</a></li>
+                    <li><a href="/store/?item_type=mobile">Điện thoại</a></li>
+                    <li><a href="/store/?item_type=fashion">Thời trang</a></li>
+                    <li><a href="/store/?item_type=home">Gia dụng</a></li>
+                    <li><a href="/store/?item_type=beauty">Làm đẹp</a></li>
                 </ul>
             </div>
             <div class="col-lg-2">
@@ -319,7 +404,7 @@
         <hr class="opacity-10 my-4">
         <div class="row align-items-center">
             <div class="col-md-6">
-                <p class="small mb-0 opacity-50">© 2026 Bookstore Microservice. All rights reserved.</p>
+                <p class="small mb-0 opacity-50">© 2026 P-shop Microservice. All rights reserved.</p>
             </div>
             <div class="col-md-6 text-md-end">
                 <p class="small mb-0 opacity-50">Designed for Industry-Level Microservices Course.</p>
@@ -329,6 +414,8 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>

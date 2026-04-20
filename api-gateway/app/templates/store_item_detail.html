@@ -1,0 +1,128 @@
+{% extends "store_base.html" %}
+{% load humanize %}
+
+{% block title %}Chi tiet san pham{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="mb-3">
+        <a href="/store/ai-assistant/" class="btn btn-sm btn-outline-secondary">Quay lai AI Assistant</a>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-warning" role="alert">
+        {{ error }}
+    </div>
+    {% else %}
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm">
+                <img
+                    src="{{ item.image_url }}"
+                    alt="{{ item.name }}"
+                    class="card-img-top"
+                    style="height: 320px; object-fit: cover;"
+                    onerror="this.src='data:image/svg+xml;utf8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27360%27 height=%27220%27%3E%3Crect width=%27100%25%27 height=%27100%25%27 fill=%27%23f2f4ff%27/%3E%3Ctext x=%2724%27 y=%27110%27 fill=%27%233a4374%27 font-size=%2720%27 font-family=%27Arial%27%3EPRODUCT%3C/text%3E%3C/svg%3E';"
+                >
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        <span class="badge text-bg-dark text-uppercase">{{ item.type }}</span>
+                        <span class="badge text-bg-info">{{ item.category }}</span>
+                        {% if item.in_stock %}
+                        <span class="badge text-bg-success">Con hang</span>
+                        {% else %}
+                        <span class="badge text-bg-secondary">Het hang</span>
+                        {% endif %}
+                    </div>
+
+                    <h3 class="fw-bold mb-2">{{ item.name }}</h3>
+                    <div class="text-muted mb-3">Ma san pham: #{{ item.id }}</div>
+
+                    <div class="fs-4 fw-bold text-primary mb-3">
+                        {{ item.price|floatformat:0|intcomma }}₫
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Ton kho:</strong> {{ item.stock }}
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Mo ta:</strong>
+                        <p class="text-muted mb-0 mt-1">{{ item.description }}</p>
+                    </div>
+
+                    {% if item.raw and item.raw.metadata %}
+                    <div class="mb-3">
+                        <strong>Thong so nhanh:</strong>
+                        <div class="row g-2 mt-1 small">
+                            <div class="col-6 col-md-4"><div class="border rounded p-2 h-100"><span class="text-muted d-block">Thuong hieu/Tac gia</span><span class="fw-semibold">{{ item.raw.metadata.brand_or_author|default:'Dang cap nhat' }}</span></div></div>
+                            <div class="col-6 col-md-4"><div class="border rounded p-2 h-100"><span class="text-muted d-block">Chat lieu</span><span class="fw-semibold">{{ item.raw.metadata.material|default:'Dang cap nhat' }}</span></div></div>
+                            <div class="col-6 col-md-4"><div class="border rounded p-2 h-100"><span class="text-muted d-block">Bao hanh</span><span class="fw-semibold">{{ item.raw.metadata.warranty_months|default:0 }} thang</span></div></div>
+                            <div class="col-6 col-md-4"><div class="border rounded p-2 h-100"><span class="text-muted d-block">Tien te</span><span class="fw-semibold">{{ item.raw.metadata.currency|default:'VND' }}</span></div></div>
+                            <div class="col-6 col-md-8"><div class="border rounded p-2 h-100"><span class="text-muted d-block">Nguon du lieu</span><span class="fw-semibold">{{ item.raw.metadata.source|default:'product-service' }}</span></div></div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <strong>Chinh sach mua hang:</strong>
+                        <ul class="small text-muted mb-0 mt-1">
+                            <li>Giao hang tieu chuan 2-5 ngay lam viec, co theo doi don hang.</li>
+                            <li>Ho tro doi/tra theo chinh sach he thong voi san pham con nguyen trang thai.</li>
+                            <li>Thanh toan linh hoat: COD, chuyen khoan, vi dien tu.</li>
+                        </ul>
+                    </div>
+
+                    {% if item.type == 'book' and item.raw %}
+                    <div class="mb-3 small text-muted">
+                        Tac gia: {{ item.raw.author|default:'Dang cap nhat' }}
+                    </div>
+                    {% endif %}
+
+                    {% if item.type == 'clothe' and item.raw %}
+                    <div class="mb-3 small text-muted">
+                        Chat lieu: {{ item.raw.material|default:'Dang cap nhat' }}
+                    </div>
+                    {% endif %}
+
+                    {% if item.type == 'fashion' and item.raw.metadata %}
+                    <div class="mb-3 small text-muted">
+                        Chat lieu: {{ item.raw.metadata.material|default:'Dang cap nhat' }}
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex flex-wrap gap-2 mt-4">
+                        {% if item.type == 'book' %}
+                        <a href="/store/book/{{ item.id }}/" class="btn btn-outline-primary">Xem trang sach day du</a>
+                        {% elif item.type == 'clothe' %}
+                        <a href="/store/clothes/{{ item.id }}/" class="btn btn-outline-primary">Xem trang quan ao day du</a>
+                        {% endif %}
+
+                        {% if item.in_stock and item.type == 'book' %}
+                        <form action="/store/add-to-cart/" method="POST" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="book_id" value="{{ item.id }}">
+                            <input type="hidden" name="next" value="/store/item/{{ item.type }}/{{ item.id }}/">
+                            <button type="submit" class="btn btn-primary">Them vao gio</button>
+                        </form>
+                        {% elif item.in_stock and item.type == 'clothe' %}
+                        <form action="/store/add-to-cart/" method="POST" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="clothe_id" value="{{ item.id }}">
+                            <input type="hidden" name="next" value="/store/item/{{ item.type }}/{{ item.id }}/">
+                            <button type="submit" class="btn btn-primary">Them vao gio</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

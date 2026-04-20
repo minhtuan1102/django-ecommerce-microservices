@@ -1,4 +1,4 @@
-﻿# 📚 Bookstore Microservice Application
+# 📚 Bookstore Microservice Application
 
 > Hệ thống quản lý nhà sách trực tuyến theo kiến trúc **Microservice**, xây dựng với **Django REST Framework**, triển khai bằng **Docker Compose**.
 
@@ -93,7 +93,7 @@
     │  │ customer_db  │  │     │  │     order_db      │   │
     │  │(customer-svc)│  │     │  │     staff_db      │   │
     │  └──────────────┘  │     │  │    manager_db     │   │
-    └────────────────────┘     │  │    catalog_db     │   │
+    └────────────────────┘     │  │    product_db     │   │
                                │  │     pay_db        │   │
     ┌────────────────────┐     │  │     ship_db       │   │
     │   phpMyAdmin       │     │  │    comment_db     │   │
@@ -128,7 +128,7 @@
 | 4 | **order-service** | `order-service:8004` | 8004 | PostgreSQL `order_db` | Django + psycopg2 | Quản lý đơn hàng |
 | 5 | **staff-service** | `staff-service:8005` | 8005 | PostgreSQL `staff_db` | Django + psycopg2 | Quản lý nhân viên |
 | 6 | **manager-service** | `manager-service:8006` | 8006 | PostgreSQL `manager_db` | Django + psycopg2 | Quản lý cấp quản lý |
-| 7 | **catalog-service** | `catalog-service:8007` | 8007 | PostgreSQL `catalog_db` | Django + psycopg2 | Danh mục & thể loại sách |
+| 7 | **product-service** | `product-service:8007` | 8007 | PostgreSQL `product_db` | Django + psycopg2 | Danh mục & thể loại sách |
 | 8 | **pay-service** | `pay-service:8008` | 8008 | PostgreSQL `pay_db` | Django + psycopg2 | Xử lý thanh toán |
 | 9 | **ship-service** | `ship-service:8009` | 8009 | PostgreSQL `ship_db` | Django + psycopg2 | Vận chuyển & tracking |
 | 10 | **comment-rate-service** | `comment-rate-service:8010` | 8010 | PostgreSQL `comment_db` | Django + psycopg2 | Đánh giá & bình luận |
@@ -491,7 +491,7 @@ DATABASES = {
 | `category` | ForeignKey(Category) | CASCADE | Danh mục |
 | `unique_together` | (book_id, category) | - | Mỗi sách/danh mục chỉ 1 lần |
 
-**Database**: PostgreSQL – `catalog_db`
+**Database**: PostgreSQL – `product_db`
 
 **Endpoints**:
 | Method | URL | Mô tả |
@@ -686,7 +686,7 @@ CART_SERVICE_URL         = "http://cart-service:8003"
 ORDER_SERVICE_URL        = "http://order-service:8004"
 STAFF_SERVICE_URL        = "http://staff-service:8005"
 MANAGER_SERVICE_URL      = "http://manager-service:8006"
-CATALOG_SERVICE_URL      = "http://catalog-service:8007"
+PRODUCT_SERVICE_URL      = "http://product-service:8007"
 PAY_SERVICE_URL          = "http://pay-service:8008"
 SHIP_SERVICE_URL         = "http://ship-service:8009"
 COMMENT_RATE_SERVICE_URL = "http://comment-rate-service:8010"
@@ -763,7 +763,7 @@ RECOMMENDER_SERVICE_URL  = "http://recommender-ai-service:8011"
   Review(id, customer_id, book_id, rating, comment, created_at)
   UNIQUE: (customer_id, book_id)
 
-[catalog_db – PostgreSQL]
+[product_db – PostgreSQL]
   Category(id, name, description, created_at)
        │
        └── BookCatalog(id, book_id, category_id)
@@ -789,7 +789,7 @@ RECOMMENDER_SERVICE_URL  = "http://recommender-ai-service:8011"
 | `order_db` | order-service | `app_order`, `app_orderitem` | Đơn hàng |
 | `staff_db` | staff-service | `app_staff` | Nhân viên |
 | `manager_db` | manager-service | `app_manager` | Quản lý |
-| `catalog_db` | catalog-service | `app_category`, `app_bookcatalog` | Danh mục |
+| `product_db` | product-service | `app_category`, `app_bookcatalog` | Danh mục |
 | `pay_db` | pay-service | `app_payment` | Thanh toán |
 | `ship_db` | ship-service | `app_shipment` | Vận chuyển |
 | `comment_db` | comment-rate-service | `app_review` | Đánh giá |
@@ -1053,7 +1053,7 @@ bookstore-microservice/
 ├── order-service/                      # Service 4: Đơn hàng (PostgreSQL)
 ├── staff-service/                      # Service 5: Nhân viên (PostgreSQL)
 ├── manager-service/                    # Service 6: Quản lý (PostgreSQL)
-├── catalog-service/                    # Service 7: Danh mục (PostgreSQL)
+├── product-service/                    # Service 7: Danh mục (PostgreSQL)
 ├── pay-service/                        # Service 8: Thanh toán (PostgreSQL)
 ├── ship-service/                       # Service 9: Vận chuyển (PostgreSQL)
 ├── comment-rate-service/               # Service 10: Đánh giá (PostgreSQL)
@@ -1118,7 +1118,7 @@ docker-compose down -v
 docker-compose up --build -d book-service
 
 # Restart nhiều service cùng lúc
-docker-compose up -d staff-service manager-service catalog-service
+docker-compose up -d staff-service manager-service product-service
 ```
 
 ### Theo dõi Logs
@@ -1203,7 +1203,7 @@ docker-compose exec api-gateway python manage.py createsuperuser
 ```bash
 docker exec bookstore-microservice-postgres-db-1 psql -U bookstore_user -d bookstore_postgres -c "CREATE DATABASE staff_db OWNER bookstore_user"
 docker exec bookstore-microservice-postgres-db-1 psql -U bookstore_user -d bookstore_postgres -c "CREATE DATABASE manager_db OWNER bookstore_user"
-docker exec bookstore-microservice-postgres-db-1 psql -U bookstore_user -d bookstore_postgres -c "CREATE DATABASE catalog_db OWNER bookstore_user"
+docker exec bookstore-microservice-postgres-db-1 psql -U bookstore_user -d bookstore_postgres -c "CREATE DATABASE product_db OWNER bookstore_user"
 docker exec bookstore-microservice-postgres-db-1 psql -U bookstore_user -d bookstore_postgres -c "CREATE DATABASE pay_db OWNER bookstore_user"
 docker exec bookstore-microservice-postgres-db-1 psql -U bookstore_user -d bookstore_postgres -c "CREATE DATABASE ship_db OWNER bookstore_user"
 docker exec bookstore-microservice-postgres-db-1 psql -U bookstore_user -d bookstore_postgres -c "CREATE DATABASE comment_db OWNER bookstore_user"
@@ -1305,3 +1305,4 @@ docker-compose up --build -d
 | **AI/ML** | Hybrid recommendation (Content-based + Popularity-based) |
 | **Tổng API endpoints** | ~55 endpoints trên 11 services |
 | **Ngôn ngữ** | Python 3.10 |
+

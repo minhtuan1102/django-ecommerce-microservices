@@ -13,6 +13,16 @@ from .views import (
     store_payment_simulate, store_confirm_receipt,
     api_secure_echo,
     admin_clothe_list, store_clothes, store_clothe_detail,
+    store_item_detail,
+    store_ai_assistant,
+    ecommerce_products_api,
+    # AI Services
+    ai_behavior_analysis_proxy, ai_chatbot_proxy, ai_chatbot_health,
+    ai_chatbot_index_status, ai_chatbot_rebuild_index,
+    ai_behavior_track_proxy, ai_recommendations_proxy,
+    ai_service_health_proxy, ai_service_generate_data_proxy,
+    ai_service_train_models_proxy, ai_service_build_graph_proxy,
+    ai_service_rag_query_proxy, ai_service_run_pipeline_proxy,
 )
 
 urlpatterns = [
@@ -34,6 +44,7 @@ urlpatterns = [
     path('store/', store_home, name='store_home'),
     path('store/clothes/', store_clothes, name='store_clothes'),
     path('store/clothes/<int:clothe_id>/', store_clothe_detail, name='store_clothe_detail'),
+    path('store/item/<str:item_type>/<int:item_id>/', store_item_detail, name='store_item_detail'),
     path('store/login/', store_login, name='store_login'),
     path('store/register/', store_register, name='store_register'),
     path('store/logout/', store_logout, name='store_logout'),
@@ -49,5 +60,22 @@ urlpatterns = [
     path('store/review/<int:book_id>/', store_add_review, name='store_add_review'),
     path('store/orders/<int:order_id>/pay/', store_payment_simulate, name='store_payment_simulate'),
     path('store/orders/<int:order_id>/confirm/', store_confirm_receipt, name='store_confirm_receipt'),
+    path('store/ai-assistant/', store_ai_assistant, name='store_ai_assistant'),
     path('api/secure-echo/', api_secure_echo, name='api_secure_echo'),
+    path('api/ecommerce/products/', ecommerce_products_api, name='ecommerce_products_api'),
+    # AI Services
+    path('api/ai/behavior/', ai_behavior_analysis_proxy, name='ai_behavior_analysis'),
+    path('api/ai/behavior/track/', ai_behavior_track_proxy, name='ai_behavior_track'),
+    path('api/ai/chat/', ai_chatbot_proxy, name='ai_chatbot'),
+    path('api/ai/recommendations/', ai_recommendations_proxy, name='ai_recommendations'),
+    path('api/ai/chat/health/', ai_chatbot_health, name='ai_chatbot_health'),
+    path('api/ai/chat/index-status/', ai_chatbot_index_status, name='ai_chatbot_index_status'),
+    path('api/ai/chat/rebuild-index/', ai_chatbot_rebuild_index, name='ai_chatbot_rebuild_index'),
+    # Unified AI Service
+    path('api/ai-service/health/', ai_service_health_proxy, name='ai_service_health'),
+    path('api/ai-service/generate-data/', ai_service_generate_data_proxy, name='ai_service_generate_data'),
+    path('api/ai-service/train-models/', ai_service_train_models_proxy, name='ai_service_train_models'),
+    path('api/ai-service/build-graph/', ai_service_build_graph_proxy, name='ai_service_build_graph'),
+    path('api/ai-service/rag-query/', ai_service_rag_query_proxy, name='ai_service_rag_query'),
+    path('api/ai-service/run-pipeline/', ai_service_run_pipeline_proxy, name='ai_service_run_pipeline'),
 ]

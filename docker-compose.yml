@@ -75,44 +75,6 @@ services:
       postgres-db:
         condition: service_healthy
 
-  book-service:
-    build: ./book-service
-    ports:
-      - "8002:8000"
-    command: sh -c "python manage.py makemigrations app && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
-    volumes:
-      - ./book-service:/app
-    environment:
-      - PYTHONUNBUFFERED=1
-      - DB_ENGINE=django.db.backends.mysql
-      - DB_NAME=bookstore_mysql
-      - DB_USER=bookstore_user
-      - DB_PASSWORD=bookstore_pass
-      - DB_HOST=mysql-db
-      - DB_PORT=3306
-    depends_on:
-      mysql-db:
-        condition: service_healthy
-
-  clothe-service:
-    build: ./clothe-service
-    ports:
-      - "8013:8000"
-    command: sh -c "python manage.py makemigrations app && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
-    volumes:
-      - ./clothe-service:/app
-    environment:
-      - PYTHONUNBUFFERED=1
-      - DB_ENGINE=django.db.backends.postgresql
-      - DB_NAME=clothe_db
-      - DB_USER=bookstore_user
-      - DB_PASSWORD=bookstore_pass
-      - DB_HOST=postgres-db
-      - DB_PORT=5432
-    depends_on:
-      postgres-db:
-        condition: service_healthy
-
   cart-service:
     build: ./cart-service
     ports:
@@ -170,40 +132,23 @@ services:
       postgres-db:
         condition: service_healthy
 
-  manager-service:
-    build: ./manager-service
-    ports:
-      - "8006:8000"
-    command: sh -c "python manage.py makemigrations app && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
-    volumes:
-      - ./manager-service:/app
-    environment:
-      - PYTHONUNBUFFERED=1
-      - DB_ENGINE=django.db.backends.postgresql
-      - DB_NAME=manager_db
-      - DB_USER=bookstore_user
-      - DB_PASSWORD=bookstore_pass
-      - DB_HOST=postgres-db
-      - DB_PORT=5432
-    depends_on:
-      postgres-db:
-        condition: service_healthy
-
-  catalog-service:
-    build: ./catalog-service
+  product-service:
+    build: ./product-service
     ports:
       - "8007:8000"
     command: sh -c "python manage.py makemigrations app && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     volumes:
-      - ./catalog-service:/app
+      - ./product-service:/app
     environment:
       - PYTHONUNBUFFERED=1
       - DB_ENGINE=django.db.backends.postgresql
-      - DB_NAME=catalog_db
+      - DB_NAME=product_db
       - DB_USER=bookstore_user
       - DB_PASSWORD=bookstore_pass
       - DB_HOST=postgres-db
       - DB_PORT=5432
+      - BOOK_SERVICE_URL=http://book-service:8000
+      - CLOTHE_SERVICE_URL=http://clothe-service:8000
     depends_on:
       postgres-db:
         condition: service_healthy
@@ -280,7 +225,7 @@ services:
       - DB_PASSWORD=bookstore_pass
       - DB_HOST=postgres-db
       - DB_PORT=5432
-      - BOOK_SERVICE_URL=http://book-service:8000
+      - BOOK_SERVICE_URL=http://product-service:8000
       - ORDER_SERVICE_URL=http://order-service:8000
       - COMMENT_RATE_SERVICE_URL=http://comment-rate-service:8000
     depends_on:
@@ -291,7 +236,7 @@ services:
     build: ./api-gateway
     ports:
       - "8000:8000"
-    command: sh -c "python manage.py makemigrations app && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    command: sh -c "python manage.py makemigrations app && python manage.py migrate && python manage.py runserver 0.0.0.0:8000 --noreload"
     volumes:
       - ./api-gateway:/app
     environment:
@@ -303,6 +248,9 @@ services:
       - DB_HOST=postgres-db
       - DB_PORT=5432
       - AUTH_SERVICE_URL=http://auth-service:8000
+      - PRODUCT_SERVICE_URL=http://product-service:8000
+      - BEHAVIOR_ANALYSIS_SERVICE_URL=http://behavior-analysis-service:8000
+      - CHATBOT_SERVICE_URL=http://consulting-chatbot-service:8000
       - JWT_ISSUER=bookstore-auth-service
       - JWT_AUDIENCE=bookstore-clients
     depends_on:
@@ -431,6 +379,83 @@ services:
       postgres-db:
         condition: service_healthy
 
+  # AI Services
+  behavior-analysis-service:
+    build: ./behavior-analysis-service
+    ports:
+      - "8014:8000"
+    command: sh -c "python manage.py makemigrations app && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./behavior-analysis-service:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=behavior_db
+      - DB_USER=bookstore_user
+      - DB_PASSWORD=bookstore_pass
+      - DB_HOST=postgres-db
+      - DB_PORT=5432
+      - CUSTOMER_SERVICE_URL=http://customer-service:8000
+      - ORDER_SERVICE_URL=http://order-service:8000
+      - COMMENT_RATE_SERVICE_URL=http://comment-rate-service:8000
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  consulting-chatbot-service:
+    build: ./consulting-chatbot-service
+    ports:
+      - "8015:8000"
+    command: sh -c "python manage.py makemigrations app && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./consulting-chatbot-service:/app
+      - ./knowledge-base/documents:/app/knowledge-base/documents
+      - ./knowledge-base/graph:/app/knowledge-base/graph
+      - ./knowledge-base/vectorstore:/app/vectorstore
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DEBUG=True
+      - SECRET_KEY=your-secret-key-change-in-production
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=chatbot_db
+      - DB_USER=bookstore_user
+      - DB_PASSWORD=bookstore_pass
+      - DB_HOST=postgres-db
+      - DB_PORT=5432
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - LLM_TYPE=${LLM_TYPE:-gemini}
+      - LLM_MODEL=${LLM_MODEL:-gemini-1.5-flash}
+      - BEHAVIOR_SERVICE_URL=http://behavior-analysis-service:8000
+      - CHROMA_PERSIST_DIRECTORY=/app/vectorstore
+      - CHROMA_COLLECTION_NAME=knowledge_base
+      - KB_DOCUMENTS_ROOT=/app/knowledge-base/documents
+      - KB_GRAPH_PATH=/app/knowledge-base/graph/knowledge_graph.json
+      - PRODUCT_AGGREGATOR_URL=http://api-gateway:8000/api/ecommerce/products/
+      - EMBEDDING_MODEL=sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+      - TEMPERATURE=${TEMPERATURE:-0.7}
+      - MAX_TOKENS=${MAX_TOKENS:-1000}
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      behavior-analysis-service:
+        condition: service_started
+    restart: unless-stopped
+
+  neo4j-db:
+    image: neo4j:5.12-community
+    container_name: bookstore-neo4j-db
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      - NEO4J_AUTH=neo4j/password
+    volumes:
+      - neo4j_data:/data
+    restart: unless-stopped
+
 volumes:
   mysql_data:
   postgres_data:
+  neo4j_data:

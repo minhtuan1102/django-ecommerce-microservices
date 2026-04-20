@@ -1,53 +1,53 @@
 {% extends 'store_base.html' %}
-{% block title %}Đăng nhập - Nhà Sách Online{% endblock %}
+{% block title %}Đăng nhập - P-Shop{% endblock %}
 {% block content %}
-
+<div id="app">
 <div class="container py-5">
   <div class="row justify-content-center">
     <div class="col-md-5 col-lg-4">
 
       <div class="text-center mb-4">
         <a href="/store/" class="text-decoration-none">
-          <i class="bi bi-book-half display-4" style="color:#1a1a2e"></i>
+          <i class="bi bi-intersect display-4" style="color:var(--primary-color)"></i>
         </a>
         <h3 class="fw-bold mt-2 mb-1">Đăng nhập</h3>
-        <p class="text-muted">Nhập email để vào tài khoản của bạn</p>
+        <p class="text-muted small">Chào mừng bạn quay trở lại với P-Shop</p>
       </div>
 
-      <div class="card border-0 shadow-sm rounded-4">
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="card-body p-4">
-          <form method="post">
+          <form method="post" @submit="onLogin">
             {% csrf_token %}
             <div class="mb-3">
-              <label class="form-label fw-semibold">Địa chỉ Email</label>
+              <label class="form-label small fw-bold">Địa chỉ Email</label>
               <div class="input-group">
-                <span class="input-group-text bg-light border-end-0">
+                <span class="input-group-text bg-light border-0">
                   <i class="bi bi-envelope text-muted"></i>
                 </span>
-                <input type="email" name="email" class="form-control border-start-0 ps-0"
+                <input type="email" name="email" v-model="email" class="form-control bg-light border-0 ps-0"
                   placeholder="email@example.com" required autofocus>
               </div>
             </div>
             <div class="mb-4">
-              <label class="form-label fw-semibold">Mật khẩu</label>
+              <label class="form-label small fw-bold">Mật khẩu</label>
               <div class="input-group">
-                <span class="input-group-text bg-light border-end-0">
+                <span class="input-group-text bg-light border-0">
                   <i class="bi bi-lock text-muted"></i>
                 </span>
-                <input type="password" name="password" class="form-control border-start-0 ps-0"
+                <input type="password" name="password" v-model="password" class="form-control bg-light border-0 ps-0"
                   placeholder="••••••••" required>
               </div>
             </div>
-            <button type="submit" class="btn btn-dark btn-lg w-100 fw-bold">
+            <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold">
               <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập
             </button>
           </form>
         </div>
       </div>
 
-      <p class="text-center mt-4 text-muted">
+      <p class="text-center mt-4 text-muted small">
         Chưa có tài khoản?
-        <a href="/store/register/" class="fw-bold text-decoration-none" style="color:#1a1a2e">
+        <a href="/store/register/" class="fw-bold text-decoration-none text-primary">
           Đăng ký ngay <i class="bi bi-arrow-right"></i>
         </a>
       </p>
@@ -55,5 +55,53 @@
     </div>
   </div>
 </div>
+</div>
+{% endblock %}
 
+{% block extra_js %}
+<script>
+const { createApp, ref, onMounted } = Vue;
+
+createApp({
+    setup() {
+        const email = ref('');
+        const password = ref('');
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return "";
+        }
+
+        const csrfToken = getCookie("csrftoken");
+
+        async function trackBehavior(eventType, data) {
+            try {
+                await axios.post("/api/ai/behavior/track/", {
+                    event_type: eventType,
+                    event_data: data || {},
+                    device: window.innerWidth <= 768 ? "mobile" : "desktop",
+                }, {
+                    headers: { "X-CSRFToken": csrfToken }
+                });
+            } catch (err) {
+                console.warn("behavior_track_failed", err);
+            }
+        }
+
+        function onLogin() {
+            trackBehavior('login_attempt', { email: email.value });
+        }
+
+        onMounted(() => {
+            trackBehavior('page_view', { page: 'store_login' });
+        });
+
+        return {
+            email, password, onLogin
+        };
+    }
+}).mount('#app');
+</script>
 {% endblock %}

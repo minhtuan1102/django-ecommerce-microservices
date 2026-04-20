@@ -1,0 +1,99 @@
+{
+  "train_loss": [
+    3.4989595050811766,
+    3.1159915237426756,
+    3.0423566455841065,
+    3.0103164157867432,
+    2.9917101287841796,
+    2.963168664932251,
+    2.9216156311035157,
+    2.5671323661804197,
+    2.0549399728775026,
+    1.3652351937294007,
+    1.1267222795486451,
+    1.0199017219543458,
+    0.9740775985717773
+  ],
+  "val_loss": [
+    3.0649706050753593,
+    3.000766023993492,
+    2.9850053563714027,
+    2.96770079433918,
+    2.988977573812008,
+    2.938608855009079,
+    2.8505012542009354,
+    2.1849844977259636,
+    1.3224513605237007,
+    0.9303484810516238,
+    0.8744093105196953,
+    0.8540215566754341,
+    0.8295328887179494
+  ],
+  "metrics": [
+    {
+      "segment_accuracy": 0.8015,
+      "category_accuracy": 0.104,
+      "churn_auc": 0.9322866525599739
+    },
+    {
+      "segment_accuracy": 0.8165,
+      "category_accuracy": 0.106,
+      "churn_auc": 0.9328266489437085
+    },
+    {
+      "segment_accuracy": 0.819,
+      "category_accuracy": 0.1025,
+      "churn_auc": 0.9318895963954631
+    },
+    {
+      "segment_accuracy": 0.8215,
+      "category_accuracy": 0.1045,
+      "churn_auc": 0.9337869140061869
+    },
+    {
+      "segment_accuracy": 0.8075,
+      "category_accuracy": 0.105,
+      "churn_auc": 0.9360043199710698
+    },
+    {
+      "segment_accuracy": 0.8295,
+      "category_accuracy": 0.1245,
+      "churn_auc": 0.9354362242280007
+    },
+    {
+      "segment_accuracy": 0.8265,
+      "category_accuracy": 0.155,
+      "churn_auc": 0.935621924341864
+    },
+    {
+      "segment_accuracy": 0.828,
+      "category_accuracy": 0.358,
+      "churn_auc": 0.9324589138498077
+    },
+    {
+      "segment_accuracy": 0.828,
+      "category_accuracy": 0.894,
+      "churn_auc": 0.9308877931496204
+    },
+    {
+      "segment_accuracy": 0.812,
+      "category_accuracy": 0.9295,
+      "churn_auc": 0.9298615556782697
+    },
+    {
+      "segment_accuracy": 0.8105,
+      "category_accuracy": 0.93,
+      "churn_auc": 0.930821820740748
+    },
+    {
+      "segment_accuracy": 0.8185,
+      "category_accuracy": 0.9295,
+      "churn_auc": 0.9332420307773505
+    },
+    {
+      "segment_accuracy": 0.83,
+      "category_accuracy": 0.9295,
+      "churn_auc": 0.9371209640768017
+    }
+  ]
+}
