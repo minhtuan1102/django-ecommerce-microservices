@@ -716,7 +716,7 @@ RECOMMENDER_SERVICE_URL  = "http://recommender-ai-service:8011"
 |-------|--------------|-------|
 | `/store/` | `store_home` | Trang chủ (kèm gợi ý AI) |
 | `/store/books/` | `store_book_list` | Danh sách tất cả sách |
-| `/store/book/<id>/` | `store_book_detail` | Chi tiết sách + đánh giá |
+| `/store/item/<item_type>/<id>/` | `store_item_detail` | Chi tiết sản phẩm đa ngành hàng (book/clothe/...) |
 | `/store/cart/` | `store_cart` | Xem giỏ hàng |
 | `/store/checkout/` | `store_checkout` | Thanh toán |
 | `/store/orders/` | `store_order_list` | Lịch sử đơn hàng |
@@ -996,7 +996,7 @@ Khách vào trang chi tiết sách → Điền form đánh giá
 |-------|-----|----------------|
 | Trang chủ | `/store/` | Banner quảng cáo, section "Gợi ý cho bạn" (AI), sách mới nhất |
 | Danh sách sách | `/store/books/` | Grid Bootstrap, hiển thị giá + tồn kho, nút thêm giỏ hàng nhanh |
-| Chi tiết sách | `/store/book/<id>/` | Ảnh bìa, mô tả đầy đủ, điểm trung bình sao, danh sách đánh giá, form viết review (cần đăng nhập) |
+| Chi tiết sản phẩm | `/store/item/<item_type>/<id>/` | Ảnh minh hoạ, mô tả đầy đủ, giá/tồn kho theo từng ngành hàng |
 | Giỏ hàng | `/store/cart/` | Danh sách sản phẩm, số lượng, tổng tiền, xóa từng món, nút checkout |
 | Thanh toán | `/store/checkout/` | Form điền địa chỉ, chọn phương thức (COD/Banking/MoMo/VNPay), tóm tắt đơn hàng |
 | Lịch sử đơn | `/store/orders/` | Tất cả đơn hàng với badge trạng thái màu sắc |
@@ -1039,7 +1039,7 @@ bookstore-microservice/
 │           ├── reviews.html            # Admin: đánh giá
 │           ├── store_home.html         # Storefront: trang chủ + AI gợi ý
 │           ├── store_books.html        # Storefront: danh sách sách
-│           ├── store_book_detail.html  # Storefront: chi tiết + form review
+│           ├── store_item_detail.html  # Storefront: chi tiết sản phẩm đa ngành hàng
 │           ├── store_cart.html         # Storefront: giỏ hàng
 │           ├── store_checkout.html     # Storefront: form thanh toán
 │           ├── store_orders.html       # Storefront: lịch sử đơn hàng

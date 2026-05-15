@@ -91,13 +91,23 @@ http://localhost:8000/store/ai-assistant/   # Web UI
 
 ## 🔧 Các lựa chọn LLM
 
-### Option 1: Gemini (Khuyến nghị) ⭐
+### Option 1: Local Ollama (Llama3) ⭐ RECOMMENDED
+```bash
+LLM_TYPE=ollama
+LLM_MODEL=llama3
+OLLAMA_BASE_URL=http://host.docker.internal:11434
+```
+- ✅ Hoàn toàn miễn phí, không giới hạn
+- ✅ Chạy local trên máy của bạn
+- ✅ Quyền riêng tư dữ liệu tuyệt đối
+
+### Option 2: Gemini (Cloud)
 ```bash
 GEMINI_API_KEY=AIzaSy...
 LLM_TYPE=gemini
 LLM_MODEL=gemini-1.5-flash
 ```
-- ✅ Miễn phí 60 requests/phút
+- ✅ Miễn phí 60 requests/phút (Cloud)
 - ✅ Không cần thẻ tín dụng
 - ✅ Tiếng Việt tốt
 

@@ -3,6 +3,7 @@ from rest_framework.response import Response
 import os
 import requests
 import time
+import hashlib
 from urllib.parse import quote
 from .models import Category, BookCatalog, ProductCatalog
 from .serializers import CategorySerializer, BookCatalogSerializer, ProductCatalogSerializer
@@ -14,6 +15,88 @@ CLOTHE_SERVICE_URL = os.environ.get('CLOTHE_SERVICE_URL', '').strip()
 REQUEST_TIMEOUT_SECONDS = 4
 EXTERNAL_SYNC_COOLDOWN_SECONDS = int(os.environ.get('EXTERNAL_SYNC_COOLDOWN_SECONDS', '60'))
 _LAST_EXTERNAL_SYNC_TS = 0.0
+CLOUDINARY_FETCH_BASE = os.environ.get(
+    'CLOUDINARY_FETCH_BASE',
+    'https://res.cloudinary.com/demo/image/fetch/f_auto,q_auto,w_900,h_900,c_fill/'
+)
+
+_SKU_IMAGE_SOURCES = {
+    'MOB-001': 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9',
+    'MOB-002': 'https://images.unsplash.com/photo-1598327105666-5b89351aff97',
+    'MOB-003': 'https://images.unsplash.com/photo-1610792516307-ea5acd9c3b00',
+    'LAP-001': 'https://images.unsplash.com/photo-1517336714739-489689fd1ca8',
+    'LAP-002': 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853',
+    'LAP-003': 'https://images.unsplash.com/photo-1484788984921-03950022c9ef',
+    'COM-001': 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7',
+    'COM-002': 'https://images.unsplash.com/photo-1547082299-de196ea013d6',
+    'TAB-001': 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0',
+    'AUD-001': 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e',
+    'AUD-002': 'https://images.unsplash.com/photo-1589003077984-894e133dabab',
+    'ACC-001': 'https://images.unsplash.com/photo-1517430816045-df4b7de11d1d',
+    'FAS-001': 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf',
+    'FAS-002': 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b',
+    'FAS-003': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff',
+    'HOM-001': 'https://images.unsplash.com/photo-1556911220-bff31c812dba',
+    'HOM-002': 'https://images.unsplash.com/photo-1574180045827-681f8a1a9622',
+    'HOM-003': 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf',
+    'HOM-004': 'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd',
+    'HOM-005': 'https://images.unsplash.com/photo-1581578731548-c64695cc6952',
+    'BEA-001': 'https://images.unsplash.com/photo-1556228720-195a672e8a03',
+    'BEA-002': 'https://images.unsplash.com/photo-1612817288484-6f916006741a',
+    'BEA-003': 'https://images.unsplash.com/photo-1596462502278-27bfdc403348',
+    'BEA-004': 'https://images.unsplash.com/photo-1559591936-c6c8d2d72f55',
+    'SPT-001': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438',
+    'SPT-002': 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b',
+    'SPT-003': 'https://images.unsplash.com/photo-1501555088652-021faa106b9b',
+    'BOO-001': 'https://images.unsplash.com/photo-1512820790803-83ca734da794',
+    'BOO-002': 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4',
+    'BOO-003': 'https://images.unsplash.com/photo-1544717305-2782549b5136',
+    'BOO-004': 'https://images.unsplash.com/photo-1506880018603-83d5b814b5a6',
+}
+
+_TYPE_IMAGE_SOURCES = {
+    'mobile': [
+        'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9',
+        'https://images.unsplash.com/photo-1598327105666-5b89351aff97',
+        'https://images.unsplash.com/photo-1610792516307-ea5acd9c3b00',
+    ],
+    'laptop': [
+        'https://images.unsplash.com/photo-1517336714739-489689fd1ca8',
+        'https://images.unsplash.com/photo-1496181133206-80ce9b88a853',
+    ],
+    'computer': [
+        'https://images.unsplash.com/photo-1587202372775-e229f172b9d7',
+        'https://images.unsplash.com/photo-1547082299-de196ea013d6',
+    ],
+    'tablet': ['https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0'],
+    'audio': [
+        'https://images.unsplash.com/photo-1505740420928-5e560c06d30e',
+        'https://images.unsplash.com/photo-1589003077984-894e133dabab',
+    ],
+    'accessory': ['https://images.unsplash.com/photo-1517430816045-df4b7de11d1d'],
+    'fashion': [
+        'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf',
+        'https://images.unsplash.com/photo-1529139574466-a303027c1d8b',
+        'https://images.unsplash.com/photo-1542291026-7eec264c27ff',
+    ],
+    'home': [
+        'https://images.unsplash.com/photo-1556911220-bff31c812dba',
+        'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd',
+    ],
+    'beauty': [
+        'https://images.unsplash.com/photo-1556228720-195a672e8a03',
+        'https://images.unsplash.com/photo-1596462502278-27bfdc403348',
+    ],
+    'sports': [
+        'https://images.unsplash.com/photo-1517836357463-d25dfeac3438',
+        'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b',
+    ],
+    'book': [
+        'https://images.unsplash.com/photo-1512820790803-83ca734da794',
+        'https://images.unsplash.com/photo-1544717305-2782549b5136',
+    ],
+    'general': ['https://images.unsplash.com/photo-1523275335684-37898b6baf30'],
+}
 
 
 class HealthCheck(APIView):
@@ -22,23 +105,16 @@ class HealthCheck(APIView):
 
 
 def _build_seed_image(item_type, sku, name):
-    label = str(item_type or "product").upper()
-    safe_name = str(name or "Product")[:30].replace("&", "and")
-    safe_sku = str(sku or "SKU")
-    svg = (
-        "<svg xmlns='http://www.w3.org/2000/svg' width='720' height='560' viewBox='0 0 720 560'>"
-        "<defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>"
-        "<stop offset='0%' stop-color='#eef2ff'/><stop offset='100%' stop-color='#f8fafc'/>"
-        "</linearGradient></defs>"
-        "<rect width='720' height='560' fill='url(#g)'/>"
-        "<rect x='40' y='40' width='640' height='480' rx='28' fill='white' stroke='#d7def3' stroke-width='3'/>"
-        f"<text x='76' y='122' font-size='34' font-weight='700' font-family='Arial, sans-serif' fill='#3340a7'>{label}</text>"
-        f"<text x='76' y='188' font-size='30' font-weight='700' font-family='Arial, sans-serif' fill='#111827'>{safe_name}</text>"
-        f"<text x='76' y='236' font-size='24' font-family='Arial, sans-serif' fill='#6b7280'>{safe_sku}</text>"
-        "<rect x='76' y='268' width='148' height='8' rx='4' fill='#4361ee' fill-opacity='0.35'/>"
-        "</svg>"
-    )
-    return f"data:image/svg+xml,{quote(svg)}"
+    normalized_type = str(item_type or 'general').lower()
+    normalized_sku = str(sku or '').upper().strip()
+    source = _SKU_IMAGE_SOURCES.get(normalized_sku)
+    if not source:
+        pool = _TYPE_IMAGE_SOURCES.get(normalized_type) or _TYPE_IMAGE_SOURCES['general']
+        key = f"{normalized_sku}:{name}:{normalized_type}"
+        index = int(hashlib.md5(key.encode('utf-8')).hexdigest()[:8], 16) % len(pool)
+        source = pool[index]
+    source_with_params = f"{source}?auto=format&fit=crop&w=1200&q=80"
+    return f"{CLOUDINARY_FETCH_BASE}{quote(source_with_params, safe='')}"
 
 
 def _build_seed_description(item):
@@ -92,6 +168,7 @@ def _to_legacy_book_payload(product):
         'category': product.category.name,
         'price': float(product.price),
         'stock': product.stock,
+        'image_url': metadata.get('image_url') or _build_seed_image('book', product.sku, product.name),
     }
 
 
@@ -105,6 +182,7 @@ def _to_legacy_clothe_payload(product):
         'category': product.category.name,
         'price': float(product.price),
         'stock': product.stock,
+        'image_url': metadata.get('image_url') or _build_seed_image('fashion', product.sku, product.name),
     }
 
 

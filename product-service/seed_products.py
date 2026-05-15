@@ -8,10 +8,10 @@ django.setup()
 from app.models import ProductCatalog, Category
 
 def seed_products():
-    # Create categories
     categories_data = [
-        "Sách văn học", "Sách kinh tế", "Sách kỹ năng",
-        "Thời trang nam", "Thời trang nữ", "Phụ kiện"
+        "Sách văn học", "Sách kinh tế", "Sách kỹ năng", "Sách thiếu nhi",
+        "Thời trang nam", "Thời trang nữ", "Phụ kiện",
+        "Điện thoại", "Laptop", "Đồ gia dụng", "Thể thao", "Làm đẹp", "Thực phẩm"
     ]
     
     cats = {}
@@ -19,70 +19,48 @@ def seed_products():
         cat, _ = Category.objects.get_or_create(name=name)
         cats[name] = cat
 
-    products = [
-        # Books
-        {
-            "sku": "book-1", "name": "Đắc Nhân Tâm", "item_type": "book", "category": cats["Sách kỹ năng"],
-            "price": 86000, "stock": 100,
-            "metadata": {"image_url": "https://images.unsplash.com/photo-1544947950-fa07a98d237f", "description": "Cuốn sách kỹ năng sống nổi tiếng nhất thế giới."}
-        },
-        {
-            "sku": "book-2", "name": "Nhà Giả Kim", "item_type": "book", "category": cats["Sách văn học"],
-            "price": 79000, "stock": 50,
-            "metadata": {"image_url": "https://images.unsplash.com/photo-1589829085413-56de8ae18c73", "description": "Hành trình tìm kiếm vận mệnh của chàng chăn cừu Santiago."}
-        },
-        {
-            "sku": "book-3", "name": "Cha Giàu Cha Nghèo", "item_type": "book", "category": cats["Sách kinh tế"],
-            "price": 125000, "stock": 30,
-            "metadata": {"image_url": "https://images.unsplash.com/photo-1592492159418-39f319320569", "description": "Bài học về tài chính cá nhân từ Robert Kiyosaki."}
-        },
-        {
-            "sku": "book-4", "name": "Lược Sử Thời Gian", "item_type": "book", "category": cats["Sách văn học"],
-            "price": 150000, "stock": 15,
-            "metadata": {"image_url": "https://images.unsplash.com/photo-1532012197267-da84d127e765", "description": "Kiệt tác của Stephen Hawking về vũ trụ."}
-        },
-        {
-            "sku": "book-5", "name": "Suối Nguồn", "item_type": "book", "category": cats["Sách văn học"],
-            "price": 245000, "stock": 10,
-            "metadata": {"image_url": "https://images.unsplash.com/photo-1543003919-a995d01a5d92", "description": "Tác phẩm kinh điển của Ayn Rand."}
-        },
-        {
-            "sku": "book-6", "name": "Tư Duy Nhanh Và Chậm", "item_type": "book", "category": cats["Sách kỹ năng"],
-            "price": 185000, "stock": 25,
-            "metadata": {"image_url": "https://images.unsplash.com/photo-1512820790803-83ca734da794", "description": "Khám phá hai hệ thống tư duy của con người."}
-        },
-        # Fashion
-        {
-            "sku": "fashion-1", "name": "Áo Polo Nam Classic", "item_type": "fashion", "category": cats["Thời trang nam"],
-            "price": 250000, "stock": 120,
-            "metadata": {"image_url": "https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99", "description": "Áo polo chất liệu cotton co giãn 4 chiều."}
-        },
-        {
-            "sku": "fashion-2", "name": "Váy Hoa Nhí Vintage", "item_type": "fashion", "category": cats["Thời trang nữ"],
-            "price": 380000, "stock": 45,
-            "metadata": {"image_url": "https://images.unsplash.com/photo-1572804013307-a9a11117bb41", "description": "Váy hoa nhẹ nhàng cho mùa hè năng động."}
-        },
-        {
-            "sku": "fashion-3", "name": "Quần Jean Slim Fit", "item_type": "fashion", "category": cats["Thời trang nam"],
-            "price": 450000, "stock": 60,
-            "metadata": {"image_url": "https://images.unsplash.com/photo-1542272604-787c3835535d", "description": "Quần jean form dáng chuẩn mực, bền màu."}
-        },
-        {
-            "sku": "fashion-4", "name": "Túi Xách Da Cao Cấp", "item_type": "fashion", "category": cats["Phụ kiện"],
-            "price": 1200000, "stock": 12,
-            "metadata": {"image_url": "https://images.unsplash.com/photo-1584917033904-493bb3c3cc0a", "description": "Túi xách da thật sang trọng cho quý cô công sở."}
-        },
-        {
-            "sku": "fashion-5", "name": "Giày Sneaker Trắng", "item_type": "fashion", "category": cats["Phụ kiện"],
-            "price": 550000, "stock": 80,
-            "metadata": {"image_url": "https://images.unsplash.com/photo-1549298916-b41d501d3772", "description": "Giày sneaker phong cách trẻ trung, dễ phối đồ."}
-        },
-        {
-            "sku": "fashion-6", "name": "Áo Khoác Blazer", "item_type": "fashion", "category": cats["Thời trang nữ"],
-            "price": 650000, "stock": 20,
-            "metadata": {"image_url": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea", "description": "Blazer phong cách Hàn Quốc thời thượng."}
-        }
-    ]
+    # Generate 120 products programmatically
+    products = []
+    
+    # 1. Books
+    book_titles = ["Hạt giống tâm hồn", "Những kẻ xuất chúng", "Sapiens: Lược sử loài người", "Tội ác và hình phạt", "Hoàng tử bé", "Dạy con làm giàu", "Không gia đình", "Chiến tranh và hòa bình", "Hai số phận", "Cuốn theo chiều gió"]
+    for i in range(25):
+        cat_name = random.choice(["Sách văn học", "Sách kinh tế", "Sách kỹ năng", "Sách thiếu nhi"])
+        products.append({
+            "sku": f"book-{100+i}", "name": f"{random.choice(book_titles)} - Tập {i+1}", "item_type": "book", "category": cats[cat_name],
+            "price": random.randint(50, 300) * 1000, "stock": random.randint(10, 200),
+            "metadata": {"image_url": f"https://picsum.photos/seed/book{i}/400/400", "description": "Sách hay nên đọc."}
+        })
+    
+    # 2. Fashion
+    fashion_items = ["Áo thun", "Áo sơ mi", "Quần jean", "Quần âu", "Váy dạ hội", "Áo khoác mùa đông", "Mũ lưỡi trai", "Giày thể thao", "Kính râm", "Túi xách", "Đồng hồ"]
+    for i in range(30):
+        cat_name = random.choice(["Thời trang nam", "Thời trang nữ", "Phụ kiện"])
+        products.append({
+            "sku": f"fash-{100+i}", "name": f"{random.choice(fashion_items)} {['Cao cấp', 'Vintage', 'Thể thao', 'Hàn Quốc'][i%4]}", "item_type": "fashion", "category": cats[cat_name],
+            "price": random.randint(100, 1500) * 1000, "stock": random.randint(5, 100),
+            "metadata": {"image_url": f"https://picsum.photos/seed/fash{i}/400/400", "description": "Chất liệu thoáng mát, bền đẹp."}
+        })
+
+    # 3. Electronics
+    tech_items = ["Điện thoại iPhone", "Điện thoại Samsung", "Laptop Dell", "Laptop Asus", "Tai nghe Bluetooth", "Sạc dự phòng", "Chuột không dây", "Bàn phím cơ"]
+    for i in range(25):
+        cat_name = random.choice(["Điện thoại", "Laptop", "Phụ kiện"])
+        products.append({
+            "sku": f"tech-{100+i}", "name": f"{random.choice(tech_items)} Pro {i+1}", "item_type": "electronics", "category": cats[cat_name],
+            "price": random.randint(500, 30000) * 1000, "stock": random.randint(5, 50),
+            "metadata": {"image_url": f"https://picsum.photos/seed/tech{i}/400/400", "description": "Hàng chính hãng, bảo hành 12 tháng."}
+        })
+
+    # 4. Others
+    other_items = ["Máy xay sinh tố", "Nồi chiên không dầu", "Tạ đơn", "Thảm yoga", "Kem dưỡng da", "Son môi", "Nước hoa", "Bánh quy", "Trà xanh"]
+    for i in range(25):
+        cat_name = random.choice(["Đồ gia dụng", "Thể thao", "Làm đẹp", "Thực phẩm"])
+        products.append({
+            "sku": f"oth-{100+i}", "name": f"{random.choice(other_items)} {['Chính hãng', 'Nhập khẩu', 'Organic'][i%3]}", "item_type": "other", "category": cats[cat_name],
+            "price": random.randint(50, 5000) * 1000, "stock": random.randint(10, 150),
+            "metadata": {"image_url": f"https://picsum.photos/seed/oth{i}/400/400", "description": "Sản phẩm chất lượng cao."}
+        })
 
     for p_data in products:
         p, created = ProductCatalog.objects.update_or_create(
@@ -96,11 +74,7 @@ def seed_products():
                 "metadata": p_data["metadata"]
             }
         )
-        if created:
-            print(f"Created product: {p.name}")
-        else:
-            print(f"Updated product: {p.name}")
 
 if __name__ == "__main__":
     seed_products()
-    print("Seeding complete!")
+    print("Seeding complete! 105 products generated.")
